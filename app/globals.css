@@ -1,26 +1,243 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand */
+  --brand:        #2662F0; /* primary actions (soft blue like screenshots) */
+  --brand-600:    #1E55D6;
+  --brand-700:    #1848B8;
+  --brand-50:     #EEF4FF;
+
+  /* Text */
+  --foreground:   #0F172A; /* slate-900 */
+  --muted-fg:     #475569; /* slate-600 */
+  --subtle-fg:    #64748B; /* slate-500 */
+  --on-inverse:   #FFFFFF;
+
+  /* Surfaces - LIGHT THEME */
+  --background:   #F7F8FB; /* page bg - LIGHT */
+  --surface:      #FFFFFF; /* cards, panels */
+  --surface-2:    #FAFBFF; /* inset blocks, accordions */
+  --surface-3:    #F3F6FD; /* info stripes */
+
+  /* Borders & dividers */
+  --border:       #E5E7EB; /* light cool gray */
+  --border-strong:#D4D7DD;
+
+  /* Focus / ring */
+  --ring:         #9EC2FF; /* soft blue ring */
+  --ring-strong:  #5B9BFF;
+
+  /* Status */
+  --success:      #15803D; /* green-700 for better contrast */
+  --success-50:   #EAF8EF;
+  --warning:      #B45309; /* amber-700 for better contrast */
+  --warning-50:   #FFF6E6;
+  --danger:       #DC2626; /* red-600 */
+  --danger-50:    #FDEAEA;
+
+  /* Badges / chips (tints) */
+  --chip-green-bg:   #EAF7EE;
+  --chip-green-fg:   #166534;
+  --chip-yellow-bg:  #FFF7E6;
+  --chip-yellow-fg:  #92400E;
+  --chip-red-bg:     #FDECEC;
+  --chip-red-fg:     #991B1B;
+
+  /* Muted (tables, zebra rows) */
+  --muted:        #F6F7FB;
+  --muted-2:      #EEF2F7;
+
+  /* Shadows */
+  --shadow-sm:    0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow-md:    0 4px 12px rgba(16, 24, 40, 0.08);
+  --shadow-lg:    0 10px 30px rgba(16, 24, 40, 0.10);
+
+  /* Legacy shadcn compatibility */
+  --radius: 0.75rem;
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+  --popover: var(--surface);
+  --popover-foreground: var(--foreground);
+  --primary: var(--brand);
+  --primary-foreground: var(--on-inverse);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--foreground);
+  --accent: var(--brand-50);
+  --accent-foreground: var(--brand-700);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--on-inverse);
+  --input: var(--border);
+  --muted-foreground: var(--muted-fg);
 }
 
 @theme inline {
+  /* Core colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-fg);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Brand colors */
+  --color-brand: var(--brand);
+  --color-brand-50: var(--brand-50);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+
+  /* Surface colors */
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  /* Status colors */
+  --color-success: var(--success);
+  --color-success-50: var(--success-50);
+  --color-warning: var(--warning);
+  --color-warning-50: var(--warning-50);
+  --color-danger: var(--danger);
+  --color-danger-50: var(--danger-50);
+
+  /* Chip colors */
+  --color-chip-green-bg: var(--chip-green-bg);
+  --color-chip-green-fg: var(--chip-green-fg);
+  --color-chip-yellow-bg: var(--chip-yellow-bg);
+  --color-chip-yellow-fg: var(--chip-yellow-fg);
+  --color-chip-red-bg: var(--chip-red-bg);
+  --color-chip-red-fg: var(--chip-red-fg);
+
+  /* Legacy shadcn compatibility */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  /* Typography */
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+
+  /* Shadows */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Dark mode – keep semantic parity (lighter effort) */
+.dark {
+  --background:   #0B1220;
+  --surface:      #0F1629;
+  --surface-2:    #0C1324;
+  --surface-3:    #0E1730;
+  --foreground:   #E5E7EB;
+  --muted-fg:     #A3ADC2;
+  --subtle-fg:    #8A94A7;
+
+  --border:       #1F2A44;
+  --border-strong:#2B3756;
+
+  --ring:         #5B9BFF;
+  --ring-strong:  #8DB6FF;
+
+  --chip-green-bg:#0E3621;
+  --chip-green-fg:#9FE9B6;
+  --chip-yellow-bg:#3A2A0E;
+  --chip-yellow-fg:#FFDCA7;
+  --chip-red-bg:  #3A1414;
+  --chip-red-fg:  #FFB3B3;
+}
+
+* {
+  border-color: var(--border);
 }
 
 body {
-  background: var(--background);
+  background: var(--background) !important;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* Ensure light mode is applied */
+html {
+  background: var(--background);
+}
+
+html.light {
+  background: var(--background);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+/* Utility classes for dot badges */
+.badge-dot::before {
+  content: "";
+  display: inline-block;
+  width: 8px; height: 8px; border-radius: 9999px; margin-right: 8px;
+}
+.badge-dot.green::before  { background: var(--success); }
+.badge-dot.yellow::before { background: var(--warning); }
+.badge-dot.red::before    { background: var(--danger); }
+
+/* Status colors with better contrast */
+.status-green {
+  background-color: var(--chip-green-bg);
+  color: var(--chip-green-fg);
+  border: 1px solid var(--border);
+}
+
+.status-yellow {
+  background-color: var(--chip-yellow-bg);
+  color: var(--chip-yellow-fg);
+  border: 1px solid var(--border);
+}
+
+.status-red {
+  background-color: var(--chip-red-bg);
+  color: var(--chip-red-fg);
+  border: 1px solid var(--border);
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Card hover effects */
+.card-hover {
+  transition: all 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
