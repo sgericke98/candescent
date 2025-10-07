@@ -114,7 +114,7 @@ export function ARRTrendChart({ accounts }: ARRTrendChartProps) {
   }
   
   return (
-    <ResponsiveContainer width="100%" height={300}>
+    <ResponsiveContainer width="100%" height={220}>
       <LineChart data={trendData} margin={{ top: 20, right: 30, left: 75, bottom: 5 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="month" />

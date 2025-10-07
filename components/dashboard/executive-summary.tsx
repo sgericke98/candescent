@@ -12,6 +12,10 @@ import { toast } from "sonner"
 import { AccountsByExecSponsorChart } from "@/components/charts/accounts-by-exec-sponsor-chart"
 import { ARRTrendChart } from "@/components/charts/arr-trend-chart"
 import { AccountsByExpiryChart } from "@/components/charts/accounts-by-expiry-chart"
+import { RiskWaterfallChartsCard } from "@/components/charts/risk-waterfall-chart"
+import { RiskCompositionCharts } from "@/components/charts/risk-composition-chart"
+import { ActivityStatusDashboard } from "@/components/dashboard/activity-status-dashboard"
+import { WinRoomEffectiveness } from "@/components/dashboard/win-room-effectiveness"
 
 interface KPIs {
   total_arr_at_risk: number
@@ -32,13 +36,6 @@ interface CriticalAccountData {
   health: number
   winRoomDate: string
   activitiesCount: number
-  activities: Array<{
-    activity: string
-    owner: string
-    dueDate: string
-    goal: string
-    status: string
-  }>
 }
 
 export function ExecutiveSummary() {
@@ -46,6 +43,7 @@ export function ExecutiveSummary() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [loadingAccount, setLoadingAccount] = useState(false)
   const [accounts, setAccounts] = useState<Account[]>([])
+  const [activities, setActivities] = useState<ActivityType[]>([])
   const [criticalAccountsData, setCriticalAccountsData] = useState<CriticalAccountData[]>([])
   const [kpis, setKpis] = useState<KPIs>({
     total_arr_at_risk: 0,
@@ -81,6 +79,13 @@ export function ExecutiveSummary() {
         } else {
           console.error('Failed to fetch accounts:', accountsResponse.status)
         }
+
+        // Fetch activities
+        const activitiesResponse = await fetch('/api/activities')
+        if (activitiesResponse.ok) {
+          const activitiesData = await activitiesResponse.json()
+          setActivities(activitiesData.activities || [])
+        }
       } catch (error) {
         console.error('Error fetching data:', error)
       } finally {
@@ -95,15 +100,16 @@ export function ExecutiveSummary() {
     try {
       const today = new Date()
       today.setHours(0, 0, 0, 0)
+      const sevenDaysFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
       
-      // Get accounts with upcoming win rooms
-      const accountsWithWinRooms = allAccounts.filter(acc => 
-        acc.next_win_room && new Date(acc.next_win_room) > today
+      // Get at-risk accounts
+      const atRiskAccounts = allAccounts.filter(acc => 
+        acc.status === 'yellow' || acc.status === 'red'
       )
       
       // Fetch full details for each account to get activities
       const detailedAccounts = await Promise.all(
-        accountsWithWinRooms.map(async (acc) => {
+        atRiskAccounts.map(async (acc) => {
           try {
             const response = await fetch(`/api/accounts/${acc.id}`)
             if (response.ok) {
@@ -123,11 +129,16 @@ export function ExecutiveSummary() {
         .map(acc => {
           if (!acc.activities || acc.activities.length === 0) return null
           
-          // Find activities that are Not Started or past due
+          // Find activities that are Not Started, past due, or due within 7 days
           const problematicActivities = acc.activities.filter((activity: ActivityType) => {
-            const isPastDue = activity.due_date && new Date(activity.due_date) < today
+            if (activity.status === 'Completed') return false
+            
+            const dueDate = activity.due_date ? new Date(activity.due_date) : null
+            const isPastDue = dueDate && dueDate < today
+            const isDueSoon = dueDate && dueDate >= today && dueDate <= sevenDaysFromNow
             const isNotStarted = activity.status === 'Not Started'
-            return isNotStarted || isPastDue
+            
+            return isPastDue || isDueSoon || isNotStarted
           })
           
           if (problematicActivities.length === 0) return null
@@ -140,17 +151,10 @@ export function ExecutiveSummary() {
             health: acc.health_score,
             winRoomDate: acc.next_win_room || 'Not scheduled',
             activitiesCount: problematicActivities.length,
-            activities: problematicActivities.map((activity: ActivityType) => ({
-              activity: activity.activity,
-              owner: activity.owner?.full_name || 'Unassigned',
-              dueDate: activity.due_date || 'No due date',
-              goal: activity.description || 'No description',
-              status: activity.status
-            }))
           }
         })
         .filter((acc): acc is CriticalAccountData => acc !== null)
-        .sort((a, b) => new Date(a.winRoomDate).getTime() - new Date(b.winRoomDate).getTime())
+        .sort((a, b) => b.arr - a.arr)
       
       setCriticalAccountsData(critical)
     } catch (error) {
@@ -233,9 +237,9 @@ export function ExecutiveSummary() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         <StatCard
           title="Total ARR at Risk"
           value={kpis.total_arr_at_risk}
@@ -287,7 +291,7 @@ export function ExecutiveSummary() {
       </div>
 
       {/* Win Room Tables Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Next Win Room Table */}
         <Card>
           <CardHeader>
@@ -368,7 +372,7 @@ export function ExecutiveSummary() {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
         {/* Accounts at Risk by Exec Sponsor */}
         <Card>
           <CardHeader>
@@ -400,33 +404,50 @@ export function ExecutiveSummary() {
         </Card>
       </div>
 
-      {/* Critical Accounts - Action Required */}
-      <Card className="border-danger/20 bg-danger-50/50">
+      {/* New Analytics Section - 2 Column Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Waterfall Charts - Risk Evolution */}
+        <RiskWaterfallChartsCard />
+
+        {/* Risk Composition Analysis */}
+        <RiskCompositionCharts accounts={accounts} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Activity Status Dashboard */}
+        <ActivityStatusDashboard activities={activities} />
+
+        {/* Win Room Effectiveness */}
+        <WinRoomEffectiveness accounts={accounts} />
+      </div>
+
+      {/* Critical Accounts - Action Required - MOVED TO BOTTOM */}
+      <Card className="border-red-300 bg-red-50/50">
         <CardHeader>
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 mt-1">
-              <div className="w-10 h-10 rounded-full bg-danger/10 flex items-center justify-center">
-                <svg className="w-5 h-5 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
             </div>
             <div className="flex-1">
-              <CardTitle className="text-danger">Critical Accounts - Action Required</CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">Accounts with upcoming Win Rooms and activities not yet started</p>
+              <CardTitle className="text-red-700">At-Risk Accounts - Action Required</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">Activities that are past due, due soon (within 7 days), or not yet started</p>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           {criticalAccountsData.length > 0 ? criticalAccountsData.map((account, index) => (
-            <div key={index} className={`space-y-4 ${index > 0 ? 'pt-6 border-t' : ''}`}>
+            <div key={index} className={`space-y-4 ${index > 0 ? 'pt-8 mt-8 border-t-2 border-red-200' : ''}`}>
               <div 
-                className="flex items-start justify-between p-4 bg-surface rounded-lg border border-danger/20 cursor-pointer hover:bg-danger/5 transition-colors"
+                className="flex items-start justify-between p-5 bg-white rounded-lg border-2 border-red-200 shadow-sm cursor-pointer hover:bg-red-50 hover:border-red-300 transition-all"
                 onClick={() => handleAccountClick(account.id)}
               >
                 <div className="space-y-1">
-                  <h3 className="font-semibold text-lg">{account.account}</h3>
-                  <p className="text-sm text-muted-fg">
+                  <h3 className="font-bold text-lg text-gray-900">{account.account}</h3>
+                  <p className="text-sm text-gray-600">
                     <svg className="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -435,62 +456,20 @@ export function ExecutiveSummary() {
                 </div>
                 <div className="flex items-start gap-6">
                   <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase">ARR</p>
-                    <p className="font-semibold text-success">{formatCurrency(account.arr)}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">ARR</p>
+                    <p className="font-bold text-green-600">{formatCurrency(account.arr)}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase">Health</p>
-                    <p className="font-semibold text-danger">{account.health}</p>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Health</p>
+                    <p className="font-bold text-red-600">{account.health}</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase">Win Room</p>
-                    <p className="font-semibold">{formatDate(account.winRoomDate)}</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-xs text-muted-foreground uppercase">Activities</p>
-                    <div className="flex items-center justify-center">
-                      <Badge variant="destructive">{account.activitiesCount}</Badge>
-                    </div>
+                    <p className="text-xs text-gray-500 uppercase font-semibold">Win Room</p>
+                    <p className="font-semibold text-gray-700">{formatDate(account.winRoomDate)}</p>
                   </div>
                 </div>
               </div>
               
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <h4 className="font-semibold text-danger">Activities Not Started</h4>
-                </div>
-                <div className="space-y-2">
-                  <div className="grid grid-cols-12 gap-4 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase bg-muted/50 rounded">
-                    <div className="col-span-3">Activity</div>
-                    <div className="col-span-2">Owner</div>
-                    <div className="col-span-2">Due Date</div>
-                    <div className="col-span-4">Goal</div>
-                    <div className="col-span-1 text-right">Status</div>
-                  </div>
-                  {account.activities.map((activity, actIndex) => (
-                    <div key={actIndex} className="grid grid-cols-12 gap-4 items-start p-3 bg-surface rounded border border-danger/10 hover:border-danger/20 transition-colors">
-                      <div className="col-span-3">
-                        <p className="font-medium text-sm">{activity.activity}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-sm text-muted-fg">{activity.owner}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="text-sm">{formatDate(activity.dueDate)}</p>
-                      </div>
-                      <div className="col-span-4">
-                        <p className="text-sm text-muted-fg">{activity.goal}</p>
-                      </div>
-                      <div className="col-span-1 flex justify-end">
-                        <Badge variant="destructive" className="text-xs">{activity.status}</Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           )) : (
             <div className="text-center py-8">
@@ -498,7 +477,7 @@ export function ExecutiveSummary() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <p className="text-muted-foreground font-medium">No critical accounts at this time</p>
-              <p className="text-sm text-muted-foreground mt-2">All accounts with upcoming Win Rooms have their activities started</p>
+              <p className="text-sm text-muted-foreground mt-2">All accounts are on track with their activities</p>
             </div>
           )}
         </CardContent>

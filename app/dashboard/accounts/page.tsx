@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { ExecutiveSummary } from "@/components/dashboard/executive-summary"
+import { AccountSearch } from '@/components/dashboard/account-search'
 
-export default async function ExecutiveSummaryPage() {
+export default async function AccountsPage() {
   const supabase = await createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -22,20 +22,20 @@ export default async function ExecutiveSummaryPage() {
     redirect('/auth/login')
   }
 
-  // Only exec_sponsor, admin, and viewer can access this page
-  if (currentUser.role === 'dsm') {
-    redirect('/dashboard/my-accounts')
+  // Only exec_sponsor and admin can access this page
+  if (currentUser.role !== 'exec_sponsor' && currentUser.role !== 'admin') {
+    redirect('/dashboard')
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Executive Summary</h1>
+        <h1 className="text-3xl font-bold">Account Search</h1>
         <p className="text-muted-foreground mt-2">
-          Comprehensive overview of account health and key performance indicators
+          Search and filter accounts with comprehensive risk analysis
         </p>
       </div>
-      <ExecutiveSummary />
+      <AccountSearch userRole={currentUser.role} />
     </div>
   )
 }

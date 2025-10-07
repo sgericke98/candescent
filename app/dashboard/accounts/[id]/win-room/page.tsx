@@ -75,10 +75,12 @@ export default function WinRoomPage() {
 
   const getRiskTypeColor = (riskType: string) => {
     switch (riskType) {
-      case 'Relationship': return 'bg-red-100 text-red-800'
-      case 'Product': return 'bg-orange-100 text-orange-800'
       case 'Competition': return 'bg-yellow-100 text-yellow-800'
       case 'Price': return 'bg-blue-100 text-blue-800'
+      case 'Product': return 'bg-orange-100 text-orange-800'
+      case 'Delivery': return 'bg-purple-100 text-purple-800'
+      case 'Relationship': return 'bg-red-100 text-red-800'
+      case 'Changes': return 'bg-green-100 text-green-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
@@ -144,6 +146,39 @@ export default function WinRoomPage() {
       }
     } catch (error) {
       toast.error('Failed to delete risk')
+    }
+  }
+
+  const handleSaveRisk = async (riskId: string, formData: FormData) => {
+    try {
+      const updateData = {
+        id: riskId,
+        risk_type: formData.get('risk_type'),
+        key_risk: formData.get('key_risk'),
+        summary: formData.get('summary'),
+        supporting_evidence: formData.get('supporting_evidence'),
+        levers_to_pull: formData.get('levers_to_pull')
+      }
+
+      const response = await fetch('/api/risks', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      })
+
+      if (response.ok) {
+        const { risk } = await response.json()
+        setAccount(prev => prev ? {
+          ...prev,
+          risks: prev.risks.map(r => r.id === riskId ? risk : r)
+        } : null)
+        toast.success('Risk updated')
+        setEditingRiskId(null)
+      } else {
+        throw new Error('Failed to update')
+      }
+    } catch (error) {
+      toast.error('Failed to update risk')
     }
   }
 
@@ -298,7 +333,7 @@ export default function WinRoomPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => router.back()}>
+          <Button variant="ghost" onClick={() => router.push('/dashboard/accounts')}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
@@ -619,10 +654,12 @@ export default function WinRoomPage() {
                 <div>
                   <Label>Risk Type *</Label>
                   <select name="risk_type" className="w-full px-3 py-2 border rounded-md h-9" aria-label="Risk type">
-                    <option value="Relationship">Relationship</option>
-                    <option value="Product">Product</option>
                     <option value="Competition">Competition</option>
                     <option value="Price">Price</option>
+                    <option value="Product">Product</option>
+                    <option value="Delivery">Delivery</option>
+                    <option value="Relationship">Relationship</option>
+                    <option value="Changes">Changes</option>
                   </select>
                 </div>
                 <div>
@@ -665,71 +702,151 @@ export default function WinRoomPage() {
               </div>
             </div>
           )}
-          <div className="space-y-4">
-            {account.risks && account.risks.length > 0 ? (
-              account.risks.map((risk) => (
-                <div key={risk.id} className="border rounded-lg p-4 space-y-3 hover:shadow-md transition-shadow">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <Badge className={getRiskTypeColor(risk.risk_type)}>
-                        {risk.risk_type}
-                      </Badge>
-                      <h4 className="font-semibold text-lg">{risk.key_risk}</h4>
-                    </div>
-                    <div className="flex gap-2 flex-shrink-0">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => setEditingRiskId(risk.id)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="text-red-500 hover:text-red-700"
-                        onClick={() => handleDeleteRisk(risk.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {risk.summary && (
-                    <div>
-                      <Label className="text-sm font-semibold text-muted-foreground">Summary</Label>
-                      <p className="text-sm mt-1">{risk.summary}</p>
-                    </div>
-                  )}
-                  
-                  {risk.supporting_evidence && (
-                    <div>
-                      <Label className="text-sm font-semibold text-muted-foreground">Supporting Evidence</Label>
-                      <p className="text-sm mt-1">{risk.supporting_evidence}</p>
-                    </div>
-                  )}
-                  
-                  {risk.levers_to_pull && (
-                    <div>
-                      <Label className="text-sm font-semibold text-muted-foreground">Levers to Pull</Label>
-                      <p className="text-sm mt-1">{risk.levers_to_pull}</p>
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No risks identified
-              </div>
-            )}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b text-left">
+                  <th className="pb-3 font-semibold">Risk Type</th>
+                  <th className="pb-3 font-semibold">Key Risk</th>
+                  <th className="pb-3 font-semibold">Summary</th>
+                  <th className="pb-3 font-semibold">Supporting Evidence</th>
+                  <th className="pb-3 font-semibold">Levers to Pull</th>
+                  <th className="pb-3 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {account.risks && account.risks.length > 0 ? (
+                  account.risks.map((risk) => (
+                    editingRiskId === risk.id ? (
+                      <tr key={risk.id} className="border-b bg-blue-50">
+                        <td className="py-4">
+                          <select
+                            name="risk_type"
+                            defaultValue={risk.risk_type}
+                            className="px-2 py-1 border rounded text-sm h-8 w-full"
+                            aria-label="Risk type"
+                          >
+                            <option value="Competition">Competition</option>
+                            <option value="Price">Price</option>
+                            <option value="Product">Product</option>
+                            <option value="Delivery">Delivery</option>
+                            <option value="Relationship">Relationship</option>
+                            <option value="Changes">Changes</option>
+                          </select>
+                        </td>
+                        <td className="py-4">
+                          <Input
+                            name="key_risk"
+                            defaultValue={risk.key_risk}
+                            className="h-8"
+                          />
+                        </td>
+                        <td className="py-4">
+                          <textarea
+                            name="summary"
+                            defaultValue={risk.summary || ''}
+                            className="w-full px-2 py-1 border rounded text-sm min-h-[60px]"
+                            aria-label="Risk summary"
+                          />
+                        </td>
+                        <td className="py-4">
+                          <textarea
+                            name="supporting_evidence"
+                            defaultValue={risk.supporting_evidence || ''}
+                            className="w-full px-2 py-1 border rounded text-sm min-h-[60px]"
+                            aria-label="Supporting evidence"
+                          />
+                        </td>
+                        <td className="py-4">
+                          <textarea
+                            name="levers_to_pull"
+                            defaultValue={risk.levers_to_pull || ''}
+                            className="w-full px-2 py-1 border rounded text-sm min-h-[60px]"
+                            aria-label="Levers to pull"
+                          />
+                        </td>
+                        <td className="py-4">
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="default" 
+                              size="sm"
+                              onClick={(e) => {
+                                const form = (e.target as HTMLElement).closest('tr')
+                                if (form) {
+                                  const formData = new FormData()
+                                  const inputs = form.querySelectorAll('input, select, textarea')
+                                  inputs.forEach((input: Element) => {
+                                    const inputElement = input as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+                                    if (inputElement.name) {
+                                      formData.append(inputElement.name, inputElement.value)
+                                    }
+                                  })
+                                  handleSaveRisk(risk.id, formData)
+                                }
+                              }}
+                            >
+                              <Save className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setEditingRiskId(null)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      <tr key={risk.id} className="border-b last:border-0 hover:bg-gray-50">
+                        <td className="py-4">
+                          <Badge className={getRiskTypeColor(risk.risk_type)}>
+                            {risk.risk_type}
+                          </Badge>
+                        </td>
+                        <td className="py-4 font-medium">{risk.key_risk}</td>
+                        <td className="py-4 text-sm">{risk.summary || '-'}</td>
+                        <td className="py-4 text-sm">{risk.supporting_evidence || '-'}</td>
+                        <td className="py-4 text-sm">{risk.levers_to_pull || '-'}</td>
+                        <td className="py-4">
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => setEditingRiskId(risk.id)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-red-500 hover:text-red-700"
+                              onClick={() => handleDeleteRisk(risk.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      No risks identified
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
 
-      {/* Battle Plan Activities */}
+      {/* Activities */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Battle Plan Activities</CardTitle>
+          <CardTitle>Activities</CardTitle>
           <Button variant="outline" size="sm" onClick={() => setShowAddActivity(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Add Activity

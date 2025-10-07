@@ -1,74 +1,37 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function POST(request: NextRequest) {
+export async function GET() {
   try {
     const supabase = await createClient()
-    const body = await request.json()
-    
-    const { data: winRoom, error } = await supabase
-      .from('win_rooms')
-      .insert(body)
-      .select()
-      .single()
-    
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-    
-    return NextResponse.json({ winRoom })
-  } catch (error) {
-    console.error('Error creating win room:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
 
-export async function PATCH(request: NextRequest) {
-  try {
-    const supabase = await createClient()
-    const body = await request.json()
-    const { id, ...updateData } = body
-    
-    const { data: winRoom, error } = await supabase
+    // Fetch all win rooms with account information
+    const { data: winRooms, error: winRoomsError } = await supabase
       .from('win_rooms')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single()
-    
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-    
-    return NextResponse.json({ winRoom })
-  } catch (error) {
-    console.error('Error updating win room:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
-  }
-}
+      .select(`
+        *,
+        account:accounts (
+          id,
+          name,
+          arr_usd,
+          status,
+          health_score,
+          dsm:users (
+            id,
+            full_name
+          )
+        )
+      `)
+      .order('date', { ascending: false })
 
-export async function DELETE(request: NextRequest) {
-  try {
-    const supabase = await createClient()
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({ error: 'Win room ID required' }, { status: 400 })
+    if (winRoomsError) {
+      console.error('Error fetching win rooms:', winRoomsError)
+      return NextResponse.json({ error: winRoomsError.message }, { status: 500 })
     }
-    
-    const { error } = await supabase
-      .from('win_rooms')
-      .delete()
-      .eq('id', id)
-    
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-    
-    return NextResponse.json({ success: true })
+
+    return NextResponse.json({ winRooms: winRooms || [] })
   } catch (error) {
-    console.error('Error deleting win room:', error)
+    console.error('Win rooms API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from 'next/navigation'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Account } from '@/lib/types/database'
 
@@ -8,6 +9,7 @@ interface AccountsByExecSponsorChartProps {
 }
 
 export function AccountsByExecSponsorChart({ accounts }: AccountsByExecSponsorChartProps) {
+  const router = useRouter()
   // Group accounts by exec sponsor
   const sponsorData = accounts.reduce((acc, account) => {
     const sponsorName = account.exec_sponsor?.name || 'Unassigned'
@@ -33,20 +35,32 @@ export function AccountsByExecSponsorChart({ accounts }: AccountsByExecSponsorCh
     (b.atRisk + b.healthy) - (a.atRisk + a.healthy)
   )
   
+  const handleBarClick = (data: unknown) => {
+    if (data && typeof data === 'object' && 'name' in data && typeof (data as { name: string }).name === 'string') {
+      // Navigate to at-risk search filtered by exec sponsor
+      router.push('/dashboard/executive-summary?tab=at-risk&sponsor=' + encodeURIComponent((data as { name: string }).name))
+    }
+  }
+  
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart 
+        data={chartData} 
+        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+        onClick={handleBarClick}
+        style={{ cursor: 'pointer' }}
+      >
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis 
           dataKey="name" 
           angle={-45}
           textAnchor="end"
           height={80}
-          fontSize={12}
+          tick={{ fontSize: 10 }}
         />
-        <YAxis />
-        <Tooltip />
-        <Legend />
+        <YAxis tick={{ fontSize: 10 }} />
+        <Tooltip cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }} />
+        <Legend wrapperStyle={{ fontSize: '11px' }} />
         <Bar dataKey="atRisk" fill="#f97316" name="At Risk" />
         <Bar dataKey="healthy" fill="#22c55e" name="Healthy" />
       </BarChart>

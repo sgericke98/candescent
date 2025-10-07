@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/status-badge"
 import { HealthChip } from "@/components/health-chip"
 import { formatCurrency, formatDateShort } from "@/lib/utils"
 import { Account } from "@/lib/types/database"
-import { Calendar, Activity } from "lucide-react"
+import { Calendar } from "lucide-react"
 
 interface AccountCardProps {
   account: Account
@@ -63,11 +63,6 @@ export function AccountCard({ account, onClick, className }: AccountCardProps) {
             </div>
           )}
           
-          <div className="flex items-center gap-2 text-sm">
-            <Activity className="h-4 w-4 text-muted-fg" />
-            <span className="text-muted-fg">Open Activities:</span>
-            <span className="font-medium">{account.open_activities_count}</span>
-          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { ExecutiveSummary } from "@/components/dashboard/executive-summary"
+import { DsmView } from '@/components/dashboard/dsm-view'
 
-export default async function ExecutiveSummaryPage() {
+export default async function MyAccountsPage() {
   const supabase = await createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -14,7 +14,7 @@ export default async function ExecutiveSummaryPage() {
   // Get user role
   const { data: currentUser } = await supabase
     .from('users')
-    .select('role')
+    .select('role, full_name')
     .eq('id', user.id)
     .single()
 
@@ -22,20 +22,20 @@ export default async function ExecutiveSummaryPage() {
     redirect('/auth/login')
   }
 
-  // Only exec_sponsor, admin, and viewer can access this page
-  if (currentUser.role === 'dsm') {
-    redirect('/dashboard/my-accounts')
+  // Only DSM can access this page
+  if (currentUser.role !== 'dsm') {
+    redirect('/dashboard')
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Executive Summary</h1>
+        <h1 className="text-3xl font-bold">My Accounts</h1>
         <p className="text-muted-foreground mt-2">
-          Comprehensive overview of account health and key performance indicators
+          Manage your assigned accounts
         </p>
       </div>
-      <ExecutiveSummary />
+      <DsmView dsmName={currentUser.full_name || 'Your'} />
     </div>
   )
 }

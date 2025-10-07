@@ -12,6 +12,11 @@
     "seed": "tsx scripts/seed.ts",
     "setup:env": "tsx scripts/setup-env.ts",
     "setup": "tsx scripts/setup-project.ts",
+    "setup:test-users": "tsx scripts/setup-test-users.ts",
+    "fix:rls": "tsx scripts/fix-rls-policy.ts",
+    "cleanup:users": "tsx scripts/cleanup-deleted-users.ts",
+    "check:duplicates": "tsx scripts/find-duplicate-users.ts",
+    "cleanup:duplicates": "tsx scripts/cleanup-duplicates.ts",
     "verify:contrast": "tsx scripts/verify-contrast.ts"
   },
   "dependencies": {

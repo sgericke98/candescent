@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Github, Mail, Lock } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -16,24 +16,93 @@ export default function LoginPage() {
   const [message, setMessage] = useState('')
   const [isMagicLink, setIsMagicLink] = useState(false)
   const supabase = createClient()
-  const router = useRouter()
+
+  useEffect(() => {
+    console.log('✅ Login page loaded')
+  }, [])
 
   const handleEmailPasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setMessage('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    try {
+      console.log('🔐 Attempting login with:', email)
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    if (error) {
-      setMessage(error.message)
-    } else {
-      router.push('/dashboard')
+      if (error) {
+        console.error('❌ Auth error:', error)
+        setMessage(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (data?.user) {
+        console.log('✅ Auth successful, checking user record...')
+        
+        // Ensure user record exists in users table
+        const { data: existingUser, error: fetchError } = await supabase
+          .from('users')
+          .select('id')
+          .eq('id', data.user.id)
+          .single()
+        
+        if (fetchError && fetchError.code !== 'PGRST116') {
+          console.error('❌ Error fetching user:', fetchError)
+          setMessage('Error checking user record. Please try again.')
+          setLoading(false)
+          return
+        }
+        
+        if (!existingUser) {
+          console.log('📝 Creating user record...')
+          
+          // Create user record
+          const userEmail = data.user.email || ''
+          let role: 'admin' | 'exec_sponsor' | 'dsm' | 'viewer' = 'viewer'
+          
+          if (userEmail === 'daniel.ban@techtorch.io' || userEmail === 'santiago.gericke@techtorch.io') {
+            role = 'admin'
+          }
+          
+          const fullName = data.user.user_metadata?.full_name || 
+                          data.user.user_metadata?.name ||
+                          userEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+          
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: data.user.id,
+              full_name: fullName,
+              role: role
+            })
+          
+          if (insertError) {
+            console.error('❌ Error creating user record:', insertError)
+            setMessage(`Error creating user record: ${insertError.message}`)
+            setLoading(false)
+            return
+          }
+          
+          console.log('✅ User record created')
+        } else {
+          console.log('✅ User record exists')
+        }
+        
+        console.log('🚀 Redirecting to dashboard...')
+        // Use window.location for more reliable redirect
+        window.location.href = '/dashboard'
+      }
+    } catch (err) {
+      console.error('❌ Unexpected error:', err)
+      setMessage('An unexpected error occurred. Please try again.')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   const handleMagicLinkLogin = async (e: React.FormEvent) => {
@@ -58,15 +127,22 @@ export default function LoginPage() {
 
   const handleGithubLogin = async () => {
     setLoading(true)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'github',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'github',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
 
-    if (error) {
-      setMessage(error.message)
+      if (error) {
+        console.error('❌ GitHub auth error:', error)
+        setMessage(error.message)
+        setLoading(false)
+      }
+    } catch (err) {
+      console.error('❌ Unexpected error:', err)
+      setMessage('An unexpected error occurred. Please try again.')
       setLoading(false)
     }
   }
@@ -74,16 +150,18 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-4">
-          <div className="flex justify-center">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-blue-500 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/30">
-                <span className="text-2xl">💡</span>
-              </div>
-              <div className="text-3xl font-bold">candescent</div>
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <Image 
+                src="/logo.png" 
+                alt="Candescent Logo" 
+                width={240} 
+                height={60}
+                className="h-12 w-auto"
+                priority
+              />
             </div>
-          </div>
-          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+            <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
           <p className="text-muted-foreground">Sign in to access Win Room Dashboard</p>
         </CardHeader>
         <CardContent className="space-y-4">

@@ -48,7 +48,7 @@ const execSponsors = [
 const accountTypes = ['Bank', 'Credit Union', 'Savings & Loan', 'Community Bank']
 const locations = ['New York', 'California', 'Texas', 'Florida', 'Illinois', 'Pennsylvania', 'Ohio', 'Georgia']
 
-const riskTypes = ['Relationship', 'Product', 'Competition', 'Price']
+const riskTypes = ['Competition', 'Price', 'Product', 'Delivery', 'Relationship', 'Changes']
 const stakeholderRoles = ['Champion', 'Influencer', 'Decision Maker', 'Budget Holder', 'Technical Lead']
 const activityTypes = [
   'Schedule executive meeting',

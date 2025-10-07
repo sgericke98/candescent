@@ -53,10 +53,12 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
 
   const getRiskTypeColor = (riskType: string) => {
     switch (riskType) {
-      case 'Relationship': return 'bg-red-100 text-red-800'
-      case 'Product': return 'bg-orange-100 text-orange-800'
       case 'Competition': return 'bg-yellow-100 text-yellow-800'
       case 'Price': return 'bg-blue-100 text-blue-800'
+      case 'Product': return 'bg-orange-100 text-orange-800'
+      case 'Delivery': return 'bg-purple-100 text-purple-800'
+      case 'Relationship': return 'bg-red-100 text-red-800'
+      case 'Changes': return 'bg-green-100 text-green-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }

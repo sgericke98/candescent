@@ -2,10 +2,10 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create custom types
-CREATE TYPE user_role AS ENUM ('viewer', 'dsm', 'admin');
+CREATE TYPE user_role AS ENUM ('viewer', 'dsm', 'admin', 'exec_sponsor');
 CREATE TYPE account_status AS ENUM ('green', 'yellow', 'red');
 CREATE TYPE activity_status AS ENUM ('Not Started', 'In Progress', 'Completed');
-CREATE TYPE risk_type AS ENUM ('Relationship', 'Product', 'Competition', 'Price');
+CREATE TYPE risk_type AS ENUM ('Competition', 'Price', 'Product', 'Delivery', 'Relationship', 'Changes');
 
 -- Create users table (mirrors Supabase auth.users)
 CREATE TABLE IF NOT EXISTS users (
@@ -46,6 +46,9 @@ CREATE TABLE IF NOT EXISTS accounts (
   current_solutions TEXT,
   next_win_room DATE,
   open_activities_count INTEGER DEFAULT 0,
+  dsm_risk_assessment BOOLEAN DEFAULT false,
+  auto_renew BOOLEAN DEFAULT false,
+  pricing_outlier BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -103,6 +106,10 @@ CREATE INDEX IF NOT EXISTS idx_accounts_dsm_id ON accounts(dsm_id);
 CREATE INDEX IF NOT EXISTS idx_accounts_exec_sponsor_id ON accounts(exec_sponsor_id);
 CREATE INDEX IF NOT EXISTS idx_accounts_status ON accounts(status);
 CREATE INDEX IF NOT EXISTS idx_accounts_health_score ON accounts(health_score);
+CREATE INDEX IF NOT EXISTS idx_accounts_dsm_risk_assessment ON accounts(dsm_risk_assessment);
+CREATE INDEX IF NOT EXISTS idx_accounts_auto_renew ON accounts(auto_renew);
+CREATE INDEX IF NOT EXISTS idx_accounts_pricing_outlier ON accounts(pricing_outlier);
+CREATE INDEX IF NOT EXISTS idx_accounts_subscription_end ON accounts(subscription_end);
 CREATE INDEX IF NOT EXISTS idx_stakeholders_account_id ON stakeholders(account_id);
 CREATE INDEX IF NOT EXISTS idx_risks_account_id ON risks(account_id);
 CREATE INDEX IF NOT EXISTS idx_activities_account_id ON activities(account_id);
@@ -209,6 +216,10 @@ CREATE POLICY "Authenticated users can read all win_rooms" ON win_rooms
   FOR SELECT USING (auth.uid() IS NOT NULL);
 
 -- Allow authenticated users to insert/update their own user record
+CREATE POLICY "Users can insert own record" ON users 
+  FOR INSERT 
+  WITH CHECK (auth.uid() = id);
+
 CREATE POLICY "Users can update own record" ON users 
   FOR UPDATE USING (auth.uid() = id);
 

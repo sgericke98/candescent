@@ -1,6 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
+export async function GET() {
+  try {
+    const supabase = await createClient()
+    
+    const { data: activities, error } = await supabase
+      .from('activities')
+      .select(`
+        *,
+        owner:users!owner_id(*)
+      `)
+      .order('due_date', { ascending: true })
+    
+    if (error) {
+      console.error('Error fetching activities:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    
+    return NextResponse.json({ activities: activities || [] })
+  } catch (error) {
+    console.error('Activities API error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()

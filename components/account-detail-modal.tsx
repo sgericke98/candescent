@@ -241,10 +241,12 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
 
   const getRiskTypeColor = (riskType: string) => {
     switch (riskType) {
-      case 'Relationship': return 'bg-red-100 text-red-800'
-      case 'Product': return 'bg-orange-100 text-orange-800'
       case 'Competition': return 'bg-yellow-100 text-yellow-800'
       case 'Price': return 'bg-blue-100 text-blue-800'
+      case 'Product': return 'bg-orange-100 text-orange-800'
+      case 'Delivery': return 'bg-purple-100 text-purple-800'
+      case 'Relationship': return 'bg-red-100 text-red-800'
+      case 'Changes': return 'bg-green-100 text-green-800'
       default: return 'bg-gray-100 text-gray-800'
     }
   }
@@ -677,7 +679,7 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
                         </div>
                       </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="grid grid-cols-2 gap-4 text-center">
                           <div>
                   <p className="text-2xl font-bold text-purple-900">{localAccount.stakeholders?.length || 0}</p>
                   <p className="text-sm text-muted-foreground">Stakeholders</p>
@@ -686,13 +688,9 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
                   <p className="text-2xl font-bold text-purple-900">{localAccount.risks?.length || 0}</p>
                   <p className="text-sm text-muted-foreground">Risks</p>
                           </div>
-                          <div>
-                  <p className="text-2xl font-bold text-purple-900">{localAccount.activities?.length || 0}</p>
-                  <p className="text-sm text-muted-foreground">Activities</p>
-                </div>
                           </div>
               <p className="text-center text-sm text-muted-foreground mt-4">
-                Click to view and manage stakeholders, risks, and battle plan activities
+                Click to view and manage stakeholders and risks
               </p>
                       </CardContent>
                     </Card>
