@@ -186,14 +186,31 @@ ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE win_rooms ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies
--- Users can read all data
-CREATE POLICY "Users can read all data" ON users FOR SELECT USING (true);
-CREATE POLICY "Users can read all exec_sponsors" ON exec_sponsors FOR SELECT USING (true);
-CREATE POLICY "Users can read all accounts" ON accounts FOR SELECT USING (true);
-CREATE POLICY "Users can read all stakeholders" ON stakeholders FOR SELECT USING (true);
-CREATE POLICY "Users can read all risks" ON risks FOR SELECT USING (true);
-CREATE POLICY "Users can read all activities" ON activities FOR SELECT USING (true);
-CREATE POLICY "Users can read all win_rooms" ON win_rooms FOR SELECT USING (true);
+-- Allow authenticated users to read all data
+CREATE POLICY "Authenticated users can read all data" ON users 
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can read all exec_sponsors" ON exec_sponsors 
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can read all accounts" ON accounts 
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can read all stakeholders" ON stakeholders 
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can read all risks" ON risks 
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can read all activities" ON activities 
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can read all win_rooms" ON win_rooms 
+  FOR SELECT USING (auth.uid() IS NOT NULL);
+
+-- Allow authenticated users to insert/update their own user record
+CREATE POLICY "Users can update own record" ON users 
+  FOR UPDATE USING (auth.uid() = id);
 
 -- DSM can insert/update activities and risks for their accounts
 CREATE POLICY "DSM can manage activities for their accounts" ON activities
@@ -214,31 +231,23 @@ CREATE POLICY "DSM can manage risks for their accounts" ON risks
     )
   );
 
--- Admin can do everything
-CREATE POLICY "Admin can manage all data" ON users FOR ALL USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "DSM can manage stakeholders for their accounts" ON stakeholders
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM accounts 
+      WHERE accounts.id = stakeholders.account_id 
+      AND accounts.dsm_id = auth.uid()
+    )
+  );
 
-CREATE POLICY "Admin can manage all exec_sponsors" ON exec_sponsors FOR ALL USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "DSM can update their accounts" ON accounts
+  FOR UPDATE USING (dsm_id = auth.uid());
 
-CREATE POLICY "Admin can manage all accounts" ON accounts FOR ALL USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
-
-CREATE POLICY "Admin can manage all stakeholders" ON stakeholders FOR ALL USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
-
-CREATE POLICY "Admin can manage all risks" ON risks FOR ALL USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
-
-CREATE POLICY "Admin can manage all activities" ON activities FOR ALL USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
-
-CREATE POLICY "Admin can manage all win_rooms" ON win_rooms FOR ALL USING (
-  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "DSM can manage win_rooms for their accounts" ON win_rooms
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM accounts 
+      WHERE accounts.id = win_rooms.account_id 
+      AND accounts.dsm_id = auth.uid()
+    )
+  );

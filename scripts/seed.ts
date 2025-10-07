@@ -1,23 +1,48 @@
+import { config } from 'dotenv'
+import { resolve } from 'path'
+import { v4 as uuidv4 } from 'uuid'
+
+// Load environment variables from .env.local
+config({ path: resolve(process.cwd(), '.env.local') })
+
 import { createAdminClient } from '../lib/supabase/admin'
 
 const supabase = createAdminClient()
 
+// Generate stable UUIDs for users
+const userIds = {
+  'Sarah Johnson': uuidv4(),
+  'Mike Chen': uuidv4(),
+  'Emily Rodriguez': uuidv4(),
+  'David Kim': uuidv4(),
+  'Lisa Wang': uuidv4(),
+  'Admin User': uuidv4(),
+  'Viewer User': uuidv4()
+}
+
+const sponsorIds = {
+  'Jennifer Martinez': uuidv4(),
+  'Robert Thompson': uuidv4(),
+  'Amanda Davis': uuidv4(),
+  'Michael Brown': uuidv4()
+}
+
 // Sample data
 const users = [
-  { id: 'user-1', full_name: 'Sarah Johnson', role: 'dsm' },
-  { id: 'user-2', full_name: 'Mike Chen', role: 'dsm' },
-  { id: 'user-3', full_name: 'Emily Rodriguez', role: 'dsm' },
-  { id: 'user-4', full_name: 'David Kim', role: 'dsm' },
-  { id: 'user-5', full_name: 'Lisa Wang', role: 'dsm' },
-  { id: 'user-6', full_name: 'Admin User', role: 'admin' },
-  { id: 'user-7', full_name: 'Viewer User', role: 'viewer' }
+  { id: userIds['Sarah Johnson'], full_name: 'Sarah Johnson', role: 'dsm' },
+  { id: userIds['Mike Chen'], full_name: 'Mike Chen', role: 'dsm' },
+  { id: userIds['Emily Rodriguez'], full_name: 'Emily Rodriguez', role: 'dsm' },
+  { id: userIds['David Kim'], full_name: 'David Kim', role: 'dsm' },
+  { id: userIds['Lisa Wang'], full_name: 'Lisa Wang', role: 'dsm' },
+  { id: userIds['Admin User'], full_name: 'Admin User', role: 'admin' },
+  { id: userIds['Viewer User'], full_name: 'Viewer User', role: 'viewer' }
 ]
 
 const execSponsors = [
-  { id: 'sponsor-1', name: 'Jennifer Martinez' },
-  { id: 'sponsor-2', name: 'Robert Thompson' },
-  { id: 'sponsor-3', name: 'Amanda Davis' },
-  { id: 'sponsor-4', name: 'Michael Brown' }
+  { id: sponsorIds['Jennifer Martinez'], name: 'Jennifer Martinez' },
+  { id: sponsorIds['Robert Thompson'], name: 'Robert Thompson' },
+  { id: sponsorIds['Amanda Davis'], name: 'Amanda Davis' },
+  { id: sponsorIds['Michael Brown'], name: 'Michael Brown' }
 ]
 
 const accountTypes = ['Bank', 'Credit Union', 'Savings & Loan', 'Community Bank']
@@ -47,6 +72,11 @@ function getRandomDate(start: Date, end: Date): string {
 
 function generateAccounts() {
   const accounts = []
+  const dsmUsers = users.filter(u => u.role === 'dsm')
+  const today = new Date()
+  const threeMonthsAgo = new Date(today.getTime() - 90 * 24 * 60 * 60 * 1000)
+  const threeMonthsFromNow = new Date(today.getTime() + 90 * 24 * 60 * 60 * 1000)
+  const oneYearFromNow = new Date(today.getTime() + 365 * 24 * 60 * 60 * 1000)
   
   for (let i = 1; i <= 25; i++) {
     const healthScore = Math.floor(Math.random() * 500) + 441 // 441-940 range
@@ -54,7 +84,7 @@ function generateAccounts() {
     const status = healthScore >= 700 ? 'green' : healthScore >= 500 ? 'yellow' : 'red'
     
     accounts.push({
-      id: `account-${i}`,
+      id: uuidv4(),
       name: `${getRandomElement(['First', 'Community', 'Regional', 'Metro', 'State', 'National', 'City', 'United'])} ${getRandomElement(['Bank', 'Credit Union', 'Savings', 'Financial'])}`,
       type: getRandomElement(accountTypes),
       location: getRandomElement(locations),
@@ -63,16 +93,16 @@ function generateAccounts() {
       aum: Math.floor(Math.random() * 5000) + 1000, // $1B to $6B
       arr_usd: arrUsd,
       platform_fee_usd: Math.floor(arrUsd * 0.1), // 10% of ARR
-      dsm_id: getRandomElement(users.filter(u => u.role === 'dsm')).id,
+      dsm_id: getRandomElement(dsmUsers).id,
       exec_sponsor_id: getRandomElement(execSponsors).id,
       health_score: healthScore,
       status: status,
       path_to_green: Math.random() > 0.5,
-      last_qbr_date: getRandomDate(new Date('2023-06-01'), new Date('2024-01-01')),
-      last_touchpoint: getRandomDate(new Date('2023-12-01'), new Date()),
-      subscription_end: getRandomDate(new Date('2024-06-01'), new Date('2025-12-31')),
+      last_qbr_date: getRandomDate(threeMonthsAgo, today),
+      last_touchpoint: getRandomDate(threeMonthsAgo, today),
+      subscription_end: getRandomDate(today, oneYearFromNow),
       current_solutions: getRandomElement(['Core Banking', 'Digital Platform', 'Mobile Banking', 'Payment Processing', 'Risk Management']),
-      next_win_room: getRandomDate(new Date(), new Date('2024-03-31')),
+      next_win_room: getRandomDate(today, threeMonthsFromNow),
       open_activities_count: Math.floor(Math.random() * 5) + 1
     })
   }
@@ -86,7 +116,7 @@ function generateStakeholders(accountId: string) {
   
   for (let i = 0; i < count; i++) {
     stakeholders.push({
-      id: `stakeholder-${accountId}-${i}`,
+      id: uuidv4(),
       account_id: accountId,
       name: `${getRandomElement(['John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa', 'Robert', 'Jennifer'])} ${getRandomElement(['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis'])}`,
       role: getRandomElement(stakeholderRoles),
@@ -111,7 +141,7 @@ function generateRisks(accountId: string) {
   for (let i = 0; i < count; i++) {
     const riskType = getRandomElement(riskTypes)
     risks.push({
-      id: `risk-${accountId}-${i}`,
+      id: uuidv4(),
       account_id: accountId,
       risk_type: riskType,
       key_risk: getRandomElement([
@@ -149,11 +179,13 @@ function generateRisks(accountId: string) {
 function generateActivities(accountId: string, dsmId: string) {
   const count = Math.floor(Math.random() * 4) + 2 // 2-5 activities
   const activities = []
+  const today = new Date()
+  const twoMonthsFromNow = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000)
   
   for (let i = 0; i < count; i++) {
-    const dueDate = getRandomDate(new Date(), new Date('2024-03-31'))
+    const dueDate = getRandomDate(today, twoMonthsFromNow)
     activities.push({
-      id: `activity-${accountId}-${i}`,
+      id: uuidv4(),
       account_id: accountId,
       activity: getRandomElement(activityTypes),
       description: getRandomElement([
@@ -177,11 +209,13 @@ function generateActivities(accountId: string, dsmId: string) {
 function generateWinRooms(accountId: string) {
   const count = Math.floor(Math.random() * 3) + 1 // 1-3 win rooms
   const winRooms = []
+  const today = new Date()
+  const sixMonthsAgo = new Date(today.getTime() - 180 * 24 * 60 * 60 * 1000)
   
   for (let i = 0; i < count; i++) {
-    const date = getRandomDate(new Date('2023-06-01'), new Date())
+    const date = getRandomDate(sixMonthsAgo, today)
     winRooms.push({
-      id: `winroom-${accountId}-${i}`,
+      id: uuidv4(),
       account_id: accountId,
       date: date,
       outcome_notes: getRandomElement([

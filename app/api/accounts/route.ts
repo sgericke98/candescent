@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
       .from('accounts')
       .select(`
         *,
-        dsm:users!dsm_id(full_name),
-        exec_sponsor:exec_sponsors!exec_sponsor_id(name)
+        dsm:users(id, full_name, role, created_at, updated_at),
+        exec_sponsor:exec_sponsors(id, name, created_at, updated_at)
       `)
     
     if (query) {
@@ -38,11 +38,17 @@ export async function GET(request: NextRequest) {
     const { data: accounts, error } = await supabaseQuery
     
     if (error) {
+      console.error('Supabase query error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
+    console.log(`✅ Fetched ${accounts?.length || 0} accounts`)
     return NextResponse.json({ accounts })
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('API route error:', error)
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : String(error)
+    }, { status: 500 })
   }
 }

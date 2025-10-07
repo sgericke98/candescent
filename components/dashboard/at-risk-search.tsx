@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { StatusBadge } from "@/components/status-badge"
 import { HealthChip } from "@/components/health-chip"
+import { AccountDetailModal } from "@/components/account-detail-modal"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { Search, Filter, Download } from "lucide-react"
-import { Account } from "@/lib/types/database"
+import { Account, AccountWithDetails } from "@/lib/types/database"
 
 export function AtRiskSearch() {
   const [accounts, setAccounts] = useState<Account[]>([])
@@ -19,96 +20,31 @@ export function AtRiskSearch() {
   const [selectedSponsor, setSelectedSponsor] = useState('')
   const [sortBy, setSortBy] = useState<'arr' | 'health' | 'next_win_room'>('arr')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-
-  // Mock data - in real app this would come from API
-  const mockAccounts: Account[] = [
-    {
-      id: '1',
-      name: 'First National Bank',
-      type: 'Bank',
-      location: 'New York',
-      rssid: 'RSS123456',
-      di_number: 'DI789012',
-      aum: 2500,
-      arr_usd: 3200,
-      platform_fee_usd: 320,
-      dsm_id: 'user-1',
-      exec_sponsor_id: 'sponsor-1',
-      health_score: 441,
-      status: 'red',
-      path_to_green: false,
-      last_qbr_date: '2023-12-15',
-      last_touchpoint: '2024-01-10',
-      subscription_end: '2024-12-31',
-      current_solutions: 'Core Banking',
-      next_win_room: '2024-01-15',
-      open_activities_count: 3,
-      created_at: '2023-06-01T00:00:00Z',
-      updated_at: '2024-01-10T00:00:00Z',
-      dsm: { id: 'user-1', full_name: 'Sarah Johnson', role: 'dsm', created_at: '', updated_at: '' },
-      exec_sponsor: { id: 'sponsor-1', name: 'Jennifer Martinez', created_at: '', updated_at: '' }
-    },
-    {
-      id: '2',
-      name: 'Community Credit Union',
-      type: 'Credit Union',
-      location: 'California',
-      rssid: 'RSS234567',
-      di_number: 'DI890123',
-      aum: 1800,
-      arr_usd: 1800,
-      platform_fee_usd: 180,
-      dsm_id: 'user-2',
-      exec_sponsor_id: 'sponsor-2',
-      health_score: 523,
-      status: 'yellow',
-      path_to_green: true,
-      last_qbr_date: '2023-11-20',
-      last_touchpoint: '2024-01-08',
-      subscription_end: '2024-11-30',
-      current_solutions: 'Digital Platform',
-      next_win_room: '2024-01-18',
-      open_activities_count: 2,
-      created_at: '2023-07-01T00:00:00Z',
-      updated_at: '2024-01-08T00:00:00Z',
-      dsm: { id: 'user-2', full_name: 'Mike Chen', role: 'dsm', created_at: '', updated_at: '' },
-      exec_sponsor: { id: 'sponsor-2', name: 'Robert Thompson', created_at: '', updated_at: '' }
-    },
-    {
-      id: '3',
-      name: 'Regional Savings Bank',
-      type: 'Bank',
-      location: 'Texas',
-      rssid: 'RSS345678',
-      di_number: 'DI901234',
-      aum: 3200,
-      arr_usd: 2500,
-      platform_fee_usd: 250,
-      dsm_id: 'user-3',
-      exec_sponsor_id: 'sponsor-3',
-      health_score: 387,
-      status: 'red',
-      path_to_green: false,
-      last_qbr_date: '2023-10-15',
-      last_touchpoint: '2024-01-05',
-      subscription_end: '2024-10-31',
-      current_solutions: 'Mobile Banking',
-      next_win_room: '2024-01-22',
-      open_activities_count: 4,
-      created_at: '2023-08-01T00:00:00Z',
-      updated_at: '2024-01-05T00:00:00Z',
-      dsm: { id: 'user-3', full_name: 'Emily Rodriguez', role: 'dsm', created_at: '', updated_at: '' },
-      exec_sponsor: { id: 'sponsor-3', name: 'Amanda Davis', created_at: '', updated_at: '' }
-    }
-  ]
+  const [selectedAccount, setSelectedAccount] = useState<AccountWithDetails | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [loadingAccount, setLoadingAccount] = useState(false)
 
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setAccounts(mockAccounts)
-      setLoading(false)
-    }, 1000)
+    // Fetch accounts from API with at-risk filter
+    const fetchAccounts = async () => {
+      try {
+        const response = await fetch('/api/accounts?atRisk=true')
+        if (response.ok) {
+          const data = await response.json()
+          setAccounts(data.accounts || [])
+        } else {
+          console.error('Failed to fetch at-risk accounts')
+        }
+      } catch (error) {
+        console.error('Error fetching accounts:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchAccounts()
   }, [])
+
 
   const filteredAccounts = accounts.filter(account => {
     const matchesSearch = !searchQuery || 
@@ -157,6 +93,47 @@ export function AtRiskSearch() {
     }
   }
 
+  const handleAccountClick = async (accountId: string) => {
+    setLoadingAccount(true)
+    setIsModalOpen(true)
+    
+    try {
+      const response = await fetch(`/api/accounts/${accountId}`)
+      if (response.ok) {
+        const data = await response.json()
+        setSelectedAccount(data.account)
+      } else {
+        console.error('Failed to fetch account details')
+      }
+    } catch (error) {
+      console.error('Error fetching account:', error)
+    } finally {
+      setLoadingAccount(false)
+    }
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedAccount(null)
+  }
+
+  // Get unique DSMs and Exec Sponsors from accounts for filter dropdowns
+  const uniqueDsms = Array.from(
+    new Map(
+      accounts
+        .filter(acc => acc.dsm)
+        .map(acc => [acc.dsm_id, acc.dsm])
+    ).values()
+  )
+
+  const uniqueSponsors = Array.from(
+    new Map(
+      accounts
+        .filter(acc => acc.exec_sponsor)
+        .map(acc => [acc.exec_sponsor_id, acc.exec_sponsor])
+    ).values()
+  )
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -200,29 +177,37 @@ export function AtRiskSearch() {
           
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">DSM:</label>
+              <label htmlFor="dsm-filter" className="text-sm font-medium">DSM:</label>
               <select 
+                id="dsm-filter"
                 value={selectedDsm} 
                 onChange={(e) => setSelectedDsm(e.target.value)}
                 className="px-3 py-1 border rounded-md text-sm"
+                aria-label="Filter by DSM"
               >
                 <option value="">All DSMs</option>
-                <option value="user-1">Sarah Johnson</option>
-                <option value="user-2">Mike Chen</option>
-                <option value="user-3">Emily Rodriguez</option>
+                {uniqueDsms.map(dsm => (
+                  <option key={dsm?.id} value={dsm?.id}>
+                    {dsm?.full_name}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Exec Sponsor:</label>
+              <label htmlFor="sponsor-filter" className="text-sm font-medium">Exec Sponsor:</label>
               <select 
+                id="sponsor-filter"
                 value={selectedSponsor} 
                 onChange={(e) => setSelectedSponsor(e.target.value)}
                 className="px-3 py-1 border rounded-md text-sm"
+                aria-label="Filter by Executive Sponsor"
               >
                 <option value="">All Exec Sponsors</option>
-                <option value="sponsor-1">Jennifer Martinez</option>
-                <option value="sponsor-2">Robert Thompson</option>
-                <option value="sponsor-3">Amanda Davis</option>
+                {uniqueSponsors.map(sponsor => (
+                  <option key={sponsor?.id} value={sponsor?.id}>
+                    {sponsor?.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -266,10 +251,7 @@ export function AtRiskSearch() {
                   <tr 
                     key={account.id} 
                     className="border-b hover:bg-muted/50 cursor-pointer"
-                    onClick={() => {
-                      // Open account detail modal
-                      console.log('Open account:', account.id)
-                    }}
+                    onClick={() => handleAccountClick(account.id)}
                   >
                     <td className="p-4">
                       <div>
@@ -328,6 +310,13 @@ export function AtRiskSearch() {
           )}
         </CardContent>
       </Card>
+
+      <AccountDetailModal
+        account={selectedAccount}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        canEdit={true}
+      />
     </div>
   )
 }
