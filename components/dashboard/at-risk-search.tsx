@@ -60,7 +60,8 @@ export function AtRiskSearch() {
   })
 
   const sortedAccounts = [...filteredAccounts].sort((a, b) => {
-    let aValue: any, bValue: any
+    let aValue: number | string | undefined
+    let bValue: number | string | undefined
     
     switch (sortBy) {
       case 'arr':
@@ -72,8 +73,8 @@ export function AtRiskSearch() {
         bValue = b.health_score
         break
       case 'next_win_room':
-        aValue = new Date(a.next_win_room || '')
-        bValue = new Date(b.next_win_room || '')
+        aValue = a.next_win_room ? new Date(a.next_win_room).getTime() : 0
+        bValue = b.next_win_room ? new Date(b.next_win_room).getTime() : 0
         break
     }
     

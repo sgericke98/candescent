@@ -10,9 +10,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { toast } from "sonner"
 import { Plus, Edit, Trash2, Save, X, Users, Building2 } from "lucide-react"
 
+interface DSM {
+  id: string
+  full_name: string
+  email: string
+  role: string
+}
+
+interface Sponsor {
+  id: string
+  name: string
+}
+
 export default function AdminPage() {
-  const [dsms, setDsms] = useState<any[]>([])
-  const [sponsors, setSponsors] = useState<any[]>([])
+  const [dsms, setDsms] = useState<DSM[]>([])
+  const [sponsors, setSponsors] = useState<Sponsor[]>([])
   const [loading, setLoading] = useState(true)
   const [editingDsmId, setEditingDsmId] = useState<string | null>(null)
   const [editingSponsorId, setEditingSponsorId] = useState<string | null>(null)
@@ -232,8 +244,9 @@ export default function AdminPage() {
                       if (form) {
                         const formData = new FormData()
                         const inputs = form.querySelectorAll('input, select')
-                        inputs.forEach((input: any) => {
-                          if (input.name) formData.append(input.name, input.value)
+                        inputs.forEach((input: Element) => {
+                          const inputElement = input as HTMLInputElement | HTMLSelectElement
+                          if (inputElement.name) formData.append(inputElement.name, inputElement.value)
                         })
                         handleAddDsm(formData)
                       }
@@ -277,8 +290,9 @@ export default function AdminPage() {
                                 if (form) {
                                   const formData = new FormData()
                                   const inputs = form.querySelectorAll('input, select')
-                                  inputs.forEach((input: any) => {
-                                    if (input.name) formData.append(input.name, input.value)
+                                  inputs.forEach((input: Element) => {
+                                    const inputElement = input as HTMLInputElement | HTMLSelectElement
+                                    if (inputElement.name) formData.append(inputElement.name, inputElement.value)
                                   })
                                   handleUpdateDsm(dsm.id, formData)
                                 }
@@ -348,8 +362,9 @@ export default function AdminPage() {
                       if (form) {
                         const formData = new FormData()
                         const inputs = form.querySelectorAll('input')
-                        inputs.forEach((input: any) => {
-                          if (input.name) formData.append(input.name, input.value)
+                        inputs.forEach((input: Element) => {
+                          const inputElement = input as HTMLInputElement
+                          if (inputElement.name) formData.append(inputElement.name, inputElement.value)
                         })
                         handleAddSponsor(formData)
                       }
@@ -385,8 +400,9 @@ export default function AdminPage() {
                                 if (form) {
                                   const formData = new FormData()
                                   const inputs = form.querySelectorAll('input')
-                                  inputs.forEach((input: any) => {
-                                    if (input.name) formData.append(input.name, input.value)
+                                  inputs.forEach((input: Element) => {
+                                    const inputElement = input as HTMLInputElement
+                                    if (inputElement.name) formData.append(inputElement.name, inputElement.value)
                                   })
                                   handleUpdateSponsor(sponsor.id, formData)
                                 }

@@ -77,17 +77,8 @@ export default function LoginPage() {
         <CardHeader className="text-center space-y-4">
           <div className="flex justify-center">
             <div className="flex items-center gap-3">
-              <div style={{
-                width: '48px',
-                height: '48px',
-                background: 'linear-gradient(135deg, #fbbf24 0%, #3b82f6 100%)',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)'
-              }}>
-                <span style={{ fontSize: '28px' }}>💡</span>
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-blue-500 rounded-lg flex items-center justify-center shadow-md shadow-blue-500/30">
+                <span className="text-2xl">💡</span>
               </div>
               <div className="text-3xl font-bold">candescent</div>
             </div>

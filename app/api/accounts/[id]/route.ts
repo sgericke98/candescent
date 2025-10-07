@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function PATCH(
@@ -26,7 +26,7 @@ export async function PATCH(
       subscription_end
     } = body
     
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
     
     if (path_to_green !== undefined) updateData.path_to_green = path_to_green
     if (next_win_room !== undefined) updateData.next_win_room = next_win_room
@@ -151,7 +151,7 @@ export async function GET(
     
     // Sort activities by due date (most recent first)
     if (account.activities) {
-      account.activities.sort((a, b) => {
+      account.activities.sort((a: { due_date: string | null }, b: { due_date: string | null }) => {
         if (!a.due_date) return 1
         if (!b.due_date) return -1
         return new Date(b.due_date).getTime() - new Date(a.due_date).getTime()
@@ -160,7 +160,7 @@ export async function GET(
     
     // Sort win rooms by date (most recent first)
     if (account.win_rooms) {
-      account.win_rooms.sort((a, b) => 
+      account.win_rooms.sort((a: { date: string }, b: { date: string }) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       )
     }

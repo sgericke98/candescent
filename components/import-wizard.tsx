@@ -39,10 +39,10 @@ const FIELD_DEFINITIONS: Record<string, { label: string; required: boolean; type
 export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'importing' | 'complete'>('upload')
   const [file, setFile] = useState<File | null>(null)
-  const [csvData, setCsvData] = useState<any[]>([])
+  const [csvData, setCsvData] = useState<Record<string, unknown>[]>([])
   const [headers, setHeaders] = useState<string[]>([])
   const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({})
-  const [importResults, setImportResults] = useState<any>(null)
+  const [importResults, setImportResults] = useState<Record<string, unknown> | null>(null)
   const [showPasteArea, setShowPasteArea] = useState(false)
   const [pastedData, setPastedData] = useState('')
 
@@ -59,7 +59,7 @@ export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
       Papa.parse(uploadedFile, {
         header: true,
         complete: (results) => {
-          setCsvData(results.data)
+          setCsvData(results.data as Record<string, unknown>[])
           setHeaders(results.meta.fields || [])
           autoMapFields(results.meta.fields || [])
           setStep('mapping')
@@ -79,9 +79,9 @@ export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
         const jsonData = XLSX.utils.sheet_to_json(worksheet)
         
         if (jsonData.length > 0) {
-          const firstRow = jsonData[0] as Record<string, any>
+          const firstRow = jsonData[0] as Record<string, unknown>
           const parsedHeaders = Object.keys(firstRow)
-          setCsvData(jsonData)
+          setCsvData(jsonData as Record<string, unknown>[])
           setHeaders(parsedHeaders)
           autoMapFields(parsedHeaders)
           setStep('mapping')
@@ -173,7 +173,7 @@ export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        setCsvData(results.data)
+        setCsvData(results.data as Record<string, unknown>[])
         setHeaders(results.meta.fields || [])
         autoMapFields(results.meta.fields || [])
         setStep('mapping')
@@ -181,7 +181,7 @@ export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
         setPastedData('')
         toast.success(`Parsed ${results.data.length} rows`)
       },
-      error: (error) => {
+      error: (error: { message: string }) => {
         toast.error(`Failed to parse data: ${error.message}`)
       }
     })
@@ -430,24 +430,24 @@ export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
             <div className="grid grid-cols-2 gap-4">
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm text-green-700 font-medium">Successful</p>
-                <p className="text-3xl font-bold text-green-900">{importResults.success}</p>
+                <p className="text-3xl font-bold text-green-900">{String(importResults.success)}</p>
               </div>
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-sm text-red-700 font-medium">Failed</p>
-                <p className="text-3xl font-bold text-red-900">{importResults.failed}</p>
+                <p className="text-3xl font-bold text-red-900">{String(importResults.failed)}</p>
               </div>
             </div>
             
-            {importResults.errors && importResults.errors.length > 0 && (
+            {importResults.errors && Array.isArray(importResults.errors) && importResults.errors.length > 0 ? (
               <div className="border rounded-lg p-4 bg-red-50">
                 <p className="font-semibold text-red-900 mb-2">Errors:</p>
                 <div className="space-y-1 max-h-48 overflow-y-auto">
-                  {importResults.errors.map((error: string, idx: number) => (
+                  {(importResults.errors as string[]).map((error: string, idx: number) => (
                     <p key={idx} className="text-sm text-red-800">• {error}</p>
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
             
             <div className="flex justify-between pt-4 border-t">
               <Button variant="outline" onClick={() => {

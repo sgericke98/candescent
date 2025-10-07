@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       
       try {
         // Map CSV fields to database fields
-        const accountData: any = {}
+        const accountData: Record<string, unknown> = {}
         
         for (const [dbField, csvField] of Object.entries(fieldMapping)) {
           if (csvField && row[csvField as string] !== undefined && row[csvField as string] !== null && row[csvField as string] !== '') {
@@ -58,8 +58,9 @@ export async function POST(request: NextRequest) {
         if (!accountData.arr_usd) accountData.arr_usd = 0
         if (accountData.health_score === undefined) accountData.health_score = 500
         if (!accountData.status) {
-          accountData.status = accountData.health_score >= 700 ? 'green' : 
-                               accountData.health_score >= 500 ? 'yellow' : 'red'
+          const healthScore = accountData.health_score as number
+          accountData.status = healthScore >= 700 ? 'green' : 
+                                healthScore >= 500 ? 'yellow' : 'red'
         }
         
         // Insert or update account

@@ -199,7 +199,7 @@ export function DSMView() {
       {filteredData.map(dsm => (
         <div key={dsm.dsm.id} className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">{dsm.dsm.full_name}'s Accounts</h2>
+            <h2 className="text-2xl font-bold">{dsm.dsm.full_name}&apos;s Accounts</h2>
             <Badge variant="outline">{dsm.accounts.length} accounts</Badge>
           </div>
           

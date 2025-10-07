@@ -20,17 +20,8 @@ export default async function DashboardLayout({
         <div className="w-full max-w-none px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="flex items-center gap-2">
-              <div style={{
-                width: '32px',
-                height: '32px',
-                background: 'linear-gradient(135deg, #fbbf24 0%, #3b82f6 100%)',
-                borderRadius: '6px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 4px rgba(59, 130, 246, 0.2)'
-              }}>
-                <span style={{ fontSize: '20px' }}>💡</span>
+              <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-blue-500 rounded-md flex items-center justify-center shadow-sm shadow-blue-500/20">
+                <span className="text-xl">💡</span>
               </div>
               <h1 className="text-xl font-bold text-foreground">candescent</h1>
             </div>

@@ -8,8 +8,13 @@ interface ARRTrendChartProps {
   accounts: Account[]
 }
 
+interface TrendDataPoint {
+  month: string
+  arr: number
+}
+
 export function ARRTrendChart({ accounts }: ARRTrendChartProps) {
-  const [trendData, setTrendData] = useState<any[]>([])
+  const [trendData, setTrendData] = useState<TrendDataPoint[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -39,19 +44,19 @@ export function ARRTrendChart({ accounts }: ARRTrendChartProps) {
     fetchHistoricalData()
   }, [accounts])
 
-  const groupSnapshotsByMonth = (snapshots: any[]) => {
+  const groupSnapshotsByMonth = (snapshots: Record<string, unknown>[]) => {
     const monthlyMap: Record<string, { total: number; count: number }> = {}
     
     snapshots.forEach(snapshot => {
       if (snapshot.status === 'yellow' || snapshot.status === 'red') {
-        const date = new Date(snapshot.snapshot_date)
+        const date = new Date(snapshot.snapshot_date as string)
         const monthKey = `${date.getFullYear()}-${date.getMonth()}`
         const monthName = date.toLocaleString('default', { month: 'short' })
         
         if (!monthlyMap[monthKey]) {
           monthlyMap[monthKey] = { total: 0, count: 0 }
         }
-        monthlyMap[monthKey].total += snapshot.arr_usd || 0
+        monthlyMap[monthKey].total += (snapshot.arr_usd as number) || 0
         monthlyMap[monthKey].count++
       }
     })

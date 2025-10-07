@@ -444,9 +444,10 @@ export default function WinRoomPage() {
                   if (form) {
                     const formData = new FormData()
                     const inputs = form.querySelectorAll('input, select')
-                    inputs.forEach((input: any) => {
-                      if (input.name) {
-                        formData.append(input.name, input.value)
+                    inputs.forEach((input: Element) => {
+                      const inputElement = input as HTMLInputElement | HTMLSelectElement
+                      if (inputElement.name) {
+                        formData.append(inputElement.name, inputElement.value)
                       }
                     })
                     handleAddStakeholder(formData)
@@ -520,9 +521,10 @@ export default function WinRoomPage() {
                                 if (form) {
                                   const formData = new FormData()
                                   const inputs = form.querySelectorAll('input, select')
-                                  inputs.forEach((input: any) => {
-                                    if (input.name) {
-                                      formData.append(input.name, input.value)
+                                  inputs.forEach((input: Element) => {
+                                    const inputElement = input as HTMLInputElement | HTMLSelectElement
+                                    if (inputElement.name) {
+                                      formData.append(inputElement.name, inputElement.value)
                                     }
                                   })
                                   handleSaveStakeholder(stakeholder.id, formData)
@@ -646,9 +648,10 @@ export default function WinRoomPage() {
                   if (form) {
                     const formData = new FormData()
                     const inputs = form.querySelectorAll('input, select, textarea')
-                    inputs.forEach((input: any) => {
-                      if (input.name) {
-                        formData.append(input.name, input.value)
+                    inputs.forEach((input: Element) => {
+                      const inputElement = input as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+                      if (inputElement.name) {
+                        formData.append(inputElement.name, inputElement.value)
                       }
                     })
                     handleAddRisk(formData)
@@ -770,9 +773,10 @@ export default function WinRoomPage() {
                   if (form) {
                     const formData = new FormData()
                     const inputs = form.querySelectorAll('input, select')
-                    inputs.forEach((input: any) => {
-                      if (input.name) {
-                        formData.append(input.name, input.value)
+                    inputs.forEach((input: Element) => {
+                      const inputElement = input as HTMLInputElement | HTMLSelectElement
+                      if (inputElement.name) {
+                        formData.append(inputElement.name, inputElement.value)
                       }
                     })
                     handleAddActivity(formData)
@@ -850,9 +854,10 @@ export default function WinRoomPage() {
                                 if (form) {
                                   const formData = new FormData()
                                   const inputs = form.querySelectorAll('input, select')
-                                  inputs.forEach((input: any) => {
-                                    if (input.name) {
-                                      formData.append(input.name, input.value)
+                                  inputs.forEach((input: Element) => {
+                                    const inputElement = input as HTMLInputElement | HTMLSelectElement
+                                    if (inputElement.name) {
+                                      formData.append(inputElement.name, inputElement.value)
                                     }
                                   })
                                   handleSaveActivity(activity.id, formData)
