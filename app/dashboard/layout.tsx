@@ -23,17 +23,28 @@ export default async function DashboardLayout({
     .select('role, full_name')
     .eq('id', user.id)
     .single()
+  
+  console.log('Current user role:', currentUser?.role, 'for user:', user.email)
 
+  const userEmail = user.email || ''
+  let role: 'admin' | 'exec_sponsor' | 'dsm' | 'viewer' = 'viewer'
+  
+  // Admin emails
+  if (userEmail === 'daniel.ban@techtorch.io' || userEmail === 'santiago.gericke@techtorch.io') {
+    role = 'admin'
+  }
+  // Check for DSM emails (add your DSM emails here)
+  else if (userEmail.toLowerCase().includes('dsm') || userEmail.toLowerCase().includes('manager')) {
+    role = 'dsm'
+  }
+  // Check for exec sponsor emails (add your exec sponsor emails here)
+  // For now, let's make any email with 'exec' in it an exec_sponsor for testing
+  else if (userEmail.toLowerCase().includes('exec') || userEmail.toLowerCase().includes('sponsor')) {
+    role = 'exec_sponsor'
+  }
+  
   // If user doesn't exist in users table, create a record
   if (!currentUser) {
-    const userEmail = user.email || ''
-    let role: 'admin' | 'exec_sponsor' | 'dsm' | 'viewer' = 'viewer'
-    
-    // Admin emails
-    if (userEmail === 'daniel.ban@techtorch.io' || userEmail === 'santiago.gericke@techtorch.io') {
-      role = 'admin'
-    }
-    
     const fullName = user.user_metadata?.full_name || 
                     user.user_metadata?.name ||
                     userEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
@@ -48,21 +59,31 @@ export default async function DashboardLayout({
     
     // Redirect to refresh the page with the new user data
     redirect('/dashboard')
+  } else if (currentUser.role !== role) {
+    // Update existing user's role if it doesn't match the expected role
+    console.log(`Updating user role from ${currentUser.role} to ${role} for ${userEmail}`)
+    await supabase
+      .from('users')
+      .update({ role: role })
+      .eq('id', user.id)
+    
+    // Redirect to refresh the page with the updated user data
+    redirect('/dashboard')
   }
 
-  // Define navigation based on role
+  // Define navigation based on role (use calculated role, not database role)
   const navigation = []
   
-  if (currentUser.role === 'dsm') {
+  if (role === 'dsm') {
     navigation.push(
       { name: 'My Accounts', href: '/dashboard/my-accounts' }
     )
-  } else if (currentUser.role === 'exec_sponsor') {
+  } else if (role === 'exec_sponsor') {
     navigation.push(
       { name: 'Executive Summary', href: '/dashboard/executive-summary' },
       { name: 'Account Search', href: '/dashboard/accounts' }
     )
-  } else if (currentUser.role === 'admin') {
+  } else if (role === 'admin') {
     navigation.push(
       { name: 'Executive Summary', href: '/dashboard/executive-summary' },
       { name: 'Account Search', href: '/dashboard/accounts' },
@@ -96,7 +117,7 @@ export default async function DashboardLayout({
               </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-muted-fg">
-                Welcome, {currentUser.full_name || user.email}
+                Welcome, {currentUser?.full_name || user.email} ({role})
               </span>
               <form action="/auth/logout" method="post">
                 <Button type="submit" variant="outline" size="sm">

@@ -13,6 +13,7 @@ import { ArrowLeft, Plus, Calendar, Edit, Trash2, Info, Target, Save, X } from "
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { HistoricalAccountView } from "@/components/historical-account-view"
+import { ActivitiesSection } from "@/components/activities-section"
 import { WinRoom } from "@/lib/types/database"
 
 export default function WinRoomPage() {
@@ -25,10 +26,8 @@ export default function WinRoomPage() {
   const [isHistoricalViewOpen, setIsHistoricalViewOpen] = useState(false)
   const [editingStakeholderId, setEditingStakeholderId] = useState<string | null>(null)
   const [editingRiskId, setEditingRiskId] = useState<string | null>(null)
-  const [editingActivityId, setEditingActivityId] = useState<string | null>(null)
   const [showAddStakeholder, setShowAddStakeholder] = useState(false)
   const [showAddRisk, setShowAddRisk] = useState(false)
-  const [showAddActivity, setShowAddActivity] = useState(false)
 
   useEffect(() => {
     const fetchAccount = async () => {
@@ -182,53 +181,7 @@ export default function WinRoomPage() {
     }
   }
 
-  const handleDeleteActivity = async (activityId: string) => {
-    if (!confirm('Are you sure you want to delete this activity?')) return
-    
-    try {
-      const response = await fetch(`/api/activities?id=${activityId}`, { method: 'DELETE' })
-      if (response.ok) {
-        setAccount(prev => prev ? { ...prev, activities: prev.activities.filter(a => a.id !== activityId) } : null)
-        toast.success('Activity deleted')
-      } else {
-        throw new Error('Failed to delete')
-      }
-    } catch (error) {
-      toast.error('Failed to delete activity')
-    }
-  }
 
-  const handleSaveActivity = async (activityId: string, formData: FormData) => {
-    try {
-      const updateData = {
-        id: activityId,
-        activity: formData.get('activity'),
-        description: formData.get('description'),
-        status: formData.get('status'),
-        due_date: formData.get('due_date') || null
-      }
-
-      const response = await fetch('/api/activities', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData)
-      })
-
-      if (response.ok) {
-        const { activity } = await response.json()
-        setAccount(prev => prev ? {
-          ...prev,
-          activities: prev.activities.map(a => a.id === activityId ? activity : a)
-        } : null)
-        toast.success('Activity updated')
-        setEditingActivityId(null)
-      } else {
-        throw new Error('Failed to update')
-      }
-    } catch (error) {
-      toast.error('Failed to update activity')
-    }
-  }
 
   const handleAddStakeholder = async (formData: FormData) => {
     try {
@@ -295,38 +248,6 @@ export default function WinRoomPage() {
     }
   }
 
-  const handleAddActivity = async (formData: FormData) => {
-    try {
-      const newActivity = {
-        account_id: params.id,
-        activity: formData.get('activity'),
-        description: formData.get('description'),
-        status: formData.get('status') || 'Not Started',
-        due_date: formData.get('due_date') || null,
-        owner_id: null // Could be enhanced to select owner
-      }
-
-      const response = await fetch('/api/activities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newActivity)
-      })
-
-      if (response.ok) {
-        const { activity } = await response.json()
-        setAccount(prev => prev ? {
-          ...prev,
-          activities: [...prev.activities, activity]
-        } : null)
-        toast.success('Activity added')
-        setShowAddActivity(false)
-      } else {
-        throw new Error('Failed to add')
-      }
-    } catch (error) {
-      toast.error('Failed to add activity')
-    }
-  }
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -844,206 +765,15 @@ export default function WinRoomPage() {
       </Card>
 
       {/* Activities */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Activities</CardTitle>
-          <Button variant="outline" size="sm" onClick={() => setShowAddActivity(true)}>
-            <Plus className="h-4 w-4 mr-1" />
-            Add Activity
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Add Activity Form */}
-          {showAddActivity && (
-            <div className="p-4 bg-green-50 border-2 border-green-500 rounded-lg space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold">Add New Activity</h4>
-                <Button variant="ghost" size="sm" onClick={() => setShowAddActivity(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Activity *</Label>
-                  <Input name="activity" placeholder="Activity name" className="h-9" />
-                </div>
-                <div>
-                  <Label>Due Date</Label>
-                  <Input name="due_date" type="date" className="h-9" />
-                </div>
-                <div className="col-span-2">
-                  <Label>Description</Label>
-                  <Input name="description" placeholder="Activity description" className="h-9" />
-                </div>
-                <div>
-                  <Label>Status</Label>
-                  <select name="status" className="w-full px-3 py-2 border rounded-md h-9" aria-label="Activity status">
-                    <option value="Not Started">Not Started</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Completed">Completed</option>
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={(e) => {
-                  const form = (e.target as HTMLElement).closest('.space-y-3')
-                  if (form) {
-                    const formData = new FormData()
-                    const inputs = form.querySelectorAll('input, select')
-                    inputs.forEach((input: Element) => {
-                      const inputElement = input as HTMLInputElement | HTMLSelectElement
-                      if (inputElement.name) {
-                        formData.append(inputElement.name, inputElement.value)
-                      }
-                    })
-                    handleAddActivity(formData)
-                  }
-                }}>
-                  Save Activity
-                </Button>
-                <Button variant="outline" onClick={() => setShowAddActivity(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b text-left">
-                  <th className="pb-3 font-semibold">Timeframe</th>
-                  <th className="pb-3 font-semibold">Activity</th>
-                  <th className="pb-3 font-semibold">Team</th>
-                  <th className="pb-3 font-semibold">Description</th>
-                  <th className="pb-3 font-semibold">Status</th>
-                  <th className="pb-3 font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {account.activities && account.activities.length > 0 ? (
-                  account.activities.map((activity) => (
-                    editingActivityId === activity.id ? (
-                      <tr key={activity.id} className="border-b bg-blue-50">
-                        <td className="py-4">
-                          <Input
-                            name="due_date"
-                            type="date"
-                            defaultValue={activity.due_date || ''}
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-4">
-                          <Input
-                            name="activity"
-                            defaultValue={activity.activity}
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-4 text-sm text-muted-foreground">
-                          {activity.owner?.full_name || 'Unassigned'}
-                        </td>
-                        <td className="py-4">
-                          <Input
-                            name="description"
-                            defaultValue={activity.description || ''}
-                            className="h-8"
-                          />
-                        </td>
-                        <td className="py-4">
-                          <select
-                            name="status"
-                            defaultValue={activity.status}
-                            className="px-2 py-1 border rounded text-sm h-8"
-                            aria-label="Activity status"
-                          >
-                            <option value="Not Started">Not Started</option>
-                            <option value="In Progress">In Progress</option>
-                            <option value="Completed">Completed</option>
-                          </select>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="default" 
-                              size="sm"
-                              onClick={(e) => {
-                                const form = (e.target as HTMLElement).closest('tr')
-                                if (form) {
-                                  const formData = new FormData()
-                                  const inputs = form.querySelectorAll('input, select')
-                                  inputs.forEach((input: Element) => {
-                                    const inputElement = input as HTMLInputElement | HTMLSelectElement
-                                    if (inputElement.name) {
-                                      formData.append(inputElement.name, inputElement.value)
-                                    }
-                                  })
-                                  handleSaveActivity(activity.id, formData)
-                                }
-                              }}
-                            >
-                              <Save className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => setEditingActivityId(null)}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      <tr key={activity.id} className="border-b last:border-0 hover:bg-gray-50">
-                        <td className="py-4 text-sm">
-                          {activity.due_date ? formatDate(activity.due_date) : 'Not set'}
-                        </td>
-                        <td className="py-4 font-medium">{activity.activity}</td>
-                        <td className="py-4 text-sm">{activity.owner?.full_name || 'Unassigned'}</td>
-                        <td className="py-4 text-sm">{activity.description || '-'}</td>
-                        <td className="py-4">
-                          <Badge className={
-                            activity.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                            activity.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-red-100 text-red-800'
-                          }>
-                            {activity.status}
-                          </Badge>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => setEditingActivityId(activity.id)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className="text-red-500 hover:text-red-700"
-                              onClick={() => handleDeleteActivity(activity.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
-                      No activities found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+      <ActivitiesSection
+        activities={account?.activities || []}
+        accountId={account?.id || ''}
+        onActivitiesUpdate={(activities) => setAccount(prev => prev ? { ...prev, activities } : null)}
+        canEdit={true}
+        showAddButton={true}
+        title="Activities"
+        variant="full"
+      />
 
       {/* Next Win Room */}
       <Card className="bg-green-50 border-green-200">

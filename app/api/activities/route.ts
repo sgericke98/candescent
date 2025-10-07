@@ -1,17 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
+    const { searchParams } = new URL(request.url)
+    const accountIds = searchParams.get('account_ids')
     
-    const { data: activities, error } = await supabase
+    let query = supabase
       .from('activities')
       .select(`
         *,
         owner:users!owner_id(*)
       `)
       .order('due_date', { ascending: true })
+    
+    // Filter by account IDs if provided
+    if (accountIds) {
+      const ids = accountIds.split(',').filter(id => id.trim())
+      if (ids.length > 0) {
+        query = query.in('account_id', ids)
+      }
+    }
+    
+    const { data: activities, error } = await query
     
     if (error) {
       console.error('Error fetching activities:', error)

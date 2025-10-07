@@ -14,6 +14,7 @@ import { HealthChip } from "@/components/health-chip"
 import { formatCurrency, formatDate, formatDateShort } from "@/lib/utils"
 import { AccountWithDetails, Activity, Risk, Stakeholder, WinRoom } from "@/lib/types/database"
 import { toast } from "sonner"
+import { ActivitiesSection } from "@/components/activities-section"
 import { 
   Edit, 
   Save,
@@ -133,37 +134,6 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
     setIsEditing(false)
   }
 
-  const handleActivityStatusUpdate = async (activityId: string, newStatus: string) => {
-    try {
-      const response = await fetch('/api/activities', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: activityId, status: newStatus })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        console.error('Activity update error:', errorData)
-        throw new Error('Failed to update activity')
-      }
-
-      const { activity } = await response.json()
-      
-      // Update local state
-      setLocalAccount(prev => prev ? {
-        ...prev,
-        activities: prev.activities.map(a => a.id === activityId ? activity : a),
-        open_activities_count: prev.activities.filter(a => 
-          a.id === activityId ? newStatus !== 'Completed' : a.status !== 'Completed'
-        ).length
-      } : null)
-      
-      toast.success('Activity status updated')
-    } catch (error) {
-      console.error('Activity update failed:', error)
-      toast.error('Failed to update activity status')
-    }
-  }
 
   const handleDeleteStakeholder = async (stakeholderId: string) => {
     if (!confirm('Are you sure you want to delete this stakeholder?')) return
@@ -187,30 +157,6 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
     }
   }
 
-  const handleDeleteActivity = async (activityId: string) => {
-    if (!confirm('Are you sure you want to delete this activity?')) return
-    
-    try {
-      const response = await fetch(`/api/activities?id=${activityId}`, {
-        method: 'DELETE'
-      })
-      
-      if (response.ok) {
-        setLocalAccount(prev => prev ? {
-          ...prev,
-          activities: prev.activities.filter(a => a.id !== activityId),
-          open_activities_count: prev.activities.filter(a => 
-            a.id !== activityId && a.status !== 'Completed'
-          ).length
-        } : null)
-        toast.success('Activity deleted')
-      } else {
-        throw new Error('Failed to delete')
-      }
-    } catch (error) {
-      toast.error('Failed to delete activity')
-    }
-  }
 
   const navigateToBattlePlan = () => {
     if (localAccount) {
@@ -230,14 +176,6 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
   }
 
-  const getActivityStatusColor = (status: string) => {
-    switch (status) {
-      case 'Completed': return 'bg-green-100 text-green-800 border-green-200'
-      case 'In Progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      case 'Not Started': return 'bg-red-100 text-red-800 border-red-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
-    }
-  }
 
   const getRiskTypeColor = (riskType: string) => {
     switch (riskType) {
@@ -361,97 +299,19 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
           </div>
 
           {/* Key Activities Section */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Key Activities
-              </CardTitle>
-              {isEditing && (
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Activity
-                </Button>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b text-left text-sm text-muted-foreground">
-                      <th className="pb-3 font-medium">Activity</th>
-                      <th className="pb-3 font-medium">Owner</th>
-                      <th className="pb-3 font-medium">Description</th>
-                      <th className="pb-3 font-medium">Status</th>
-                      <th className="pb-3 font-medium">Due Date</th>
-                      {isEditing && <th className="pb-3 font-medium">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {localAccount.activities && localAccount.activities.length > 0 ? (
-                      localAccount.activities.map((activity) => (
-                        <tr key={activity.id} className="border-b last:border-0">
-                          <td className="py-4 font-medium">{activity.activity}</td>
-                          <td className="py-4">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback className="text-xs">
-                                  {getInitials(activity.owner?.full_name || 'Unknown')}
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-sm">{activity.owner?.full_name || 'Unassigned'}</span>
-                            </div>
-                          </td>
-                          <td className="py-4 text-sm text-muted-foreground max-w-xs truncate">
-                            {activity.description || '-'}
-                          </td>
-                          <td className="py-4">
-                            {isEditing ? (
-                              <select
-                                value={activity.status}
-                                onChange={(e) => handleActivityStatusUpdate(activity.id, e.target.value)}
-                                className="px-2 py-1 border rounded text-sm"
-                                aria-label={`Update status for ${activity.activity}`}
-                              >
-                                <option value="Not Started">Not Started</option>
-                                <option value="In Progress">In Progress</option>
-                                <option value="Completed">Completed</option>
-                              </select>
-                            ) : (
-                              <Badge className={getActivityStatusColor(activity.status)}>
-                                {activity.status}
-                              </Badge>
-                            )}
-                          </td>
-                          <td className="py-4 text-sm">
-                            {activity.due_date ? formatDateShort(activity.due_date) : '-'}
-                          </td>
-                          {isEditing && (
-                            <td className="py-4">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="text-red-500 hover:text-red-700"
-                                onClick={() => handleDeleteActivity(activity.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </td>
-                          )}
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-muted-foreground">
-                          No activities found
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          <ActivitiesSection
+            activities={localAccount?.activities || []}
+            accountId={localAccount?.id || ''}
+            onActivitiesUpdate={(activities) => setLocalAccount(prev => prev ? { 
+              ...prev, 
+              activities,
+              open_activities_count: activities.filter(a => a.status !== 'Completed').length
+            } : null)}
+            canEdit={isEditing}
+            showAddButton={isEditing}
+            title="Key Activities"
+            variant="compact"
+          />
 
           {/* Account Details Section */}
           <Card>

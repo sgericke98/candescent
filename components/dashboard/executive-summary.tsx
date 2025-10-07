@@ -61,27 +61,31 @@ export function ExecutiveSummary() {
     // Fetch KPIs and accounts from API
     const fetchData = async () => {
       try {
-        // Fetch KPIs
-        const kpisResponse = await fetch('/api/kpis')
+        // Fetch all data in parallel for better performance
+        const [kpisResponse, accountsResponse, activitiesResponse] = await Promise.all([
+          fetch('/api/kpis'),
+          fetch('/api/accounts'),
+          fetch('/api/activities')
+        ])
+        
+        // Process KPIs
         if (kpisResponse.ok) {
           const kpisData = await kpisResponse.json()
           setKpis(kpisData.kpis)
         }
         
-        // Fetch accounts
-        const accountsResponse = await fetch('/api/accounts')
+        // Process accounts
         if (accountsResponse.ok) {
           const accountsData = await accountsResponse.json()
           setAccounts(accountsData.accounts || [])
           
-          // Fetch critical accounts with activities
+          // Fetch critical accounts with activities (this will be optimized)
           await fetchCriticalAccounts(accountsData.accounts || [])
         } else {
           console.error('Failed to fetch accounts:', accountsResponse.status)
         }
 
-        // Fetch activities
-        const activitiesResponse = await fetch('/api/activities')
+        // Process activities
         if (activitiesResponse.ok) {
           const activitiesData = await activitiesResponse.json()
           setActivities(activitiesData.activities || [])
@@ -107,30 +111,38 @@ export function ExecutiveSummary() {
         acc.status === 'yellow' || acc.status === 'red'
       )
       
-      // Fetch full details for each account to get activities
-      const detailedAccounts = await Promise.all(
-        atRiskAccounts.map(async (acc) => {
-          try {
-            const response = await fetch(`/api/accounts/${acc.id}`)
-            if (response.ok) {
-              const data = await response.json()
-              return data.account
-            }
-          } catch (error) {
-            console.error(`Error fetching account ${acc.id}:`, error)
-          }
-          return null
-        })
-      )
+      // If no at-risk accounts, set empty array and return
+      if (atRiskAccounts.length === 0) {
+        setCriticalAccountsData([])
+        return
+      }
+      
+      // Fetch activities for all at-risk accounts in a single query
+      const accountIds = atRiskAccounts.map(acc => acc.id)
+      const activitiesResponse = await fetch(`/api/activities?account_ids=${accountIds.join(',')}`)
+      
+      let allActivities: ActivityType[] = []
+      if (activitiesResponse.ok) {
+        const activitiesData = await activitiesResponse.json()
+        allActivities = activitiesData.activities || []
+      }
+      
+      // Group activities by account ID
+      const activitiesByAccount = allActivities.reduce((acc, activity) => {
+        if (!acc[activity.account_id]) {
+          acc[activity.account_id] = []
+        }
+        acc[activity.account_id].push(activity)
+        return acc
+      }, {} as Record<string, ActivityType[]>)
       
       // Filter accounts with problematic activities and map to display format
-      const critical: CriticalAccountData[] = detailedAccounts
-        .filter(acc => acc !== null)
+      const critical: CriticalAccountData[] = atRiskAccounts
         .map(acc => {
-          if (!acc.activities || acc.activities.length === 0) return null
+          const accountActivities = activitiesByAccount[acc.id] || []
           
           // Find activities that are Not Started, past due, or due within 7 days
-          const problematicActivities = acc.activities.filter((activity: ActivityType) => {
+          const problematicActivities = accountActivities.filter((activity: ActivityType) => {
             if (activity.status === 'Completed') return false
             
             const dueDate = activity.due_date ? new Date(activity.due_date) : null
