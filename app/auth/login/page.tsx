@@ -74,9 +74,26 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Welcome to Candescent</CardTitle>
-          <p className="text-muted-foreground">Sign in to access your dashboard</p>
+        <CardHeader className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="flex items-center gap-3">
+              <div style={{
+                width: '48px',
+                height: '48px',
+                background: 'linear-gradient(135deg, #fbbf24 0%, #3b82f6 100%)',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 6px rgba(59, 130, 246, 0.3)'
+              }}>
+                <span style={{ fontSize: '28px' }}>💡</span>
+              </div>
+              <div className="text-3xl font-bold">candescent</div>
+            </div>
+          </div>
+          <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
+          <p className="text-muted-foreground">Sign in to access Win Room Dashboard</p>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Toggle between email/password and magic link */}
