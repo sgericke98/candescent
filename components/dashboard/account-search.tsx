@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { HealthChip } from "@/components/health-chip"
 import { AccountDetailModal } from "@/components/account-detail-modal"
 import { formatCurrency, formatDate } from "@/lib/utils"
-import { Search, Filter, Download, X, Check } from "lucide-react"
+import { Search, Download, X, Check } from "lucide-react"
 import { Account, AccountWithDetails } from "@/lib/types/database"
 
 interface AccountSearchProps {
@@ -27,13 +27,8 @@ export function AccountSearch({ userRole }: AccountSearchProps) {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [selectedAccount, setSelectedAccount] = useState<AccountWithDetails | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [loadingAccount, setLoadingAccount] = useState(false)
 
-  useEffect(() => {
-    fetchAccounts()
-  }, [riskFilter, selectedDsm, selectedSponsor])
-
-  const fetchAccounts = async () => {
+  const fetchAccounts = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams()
@@ -62,7 +57,11 @@ export function AccountSearch({ userRole }: AccountSearchProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [riskFilter, selectedDsm, selectedSponsor])
+
+  useEffect(() => {
+    fetchAccounts()
+  }, [fetchAccounts])
 
   const filteredAccounts = accounts.filter(account => {
     const matchesSearch = !searchQuery || 
@@ -111,7 +110,6 @@ export function AccountSearch({ userRole }: AccountSearchProps) {
   }
 
   const handleAccountClick = async (accountId: string) => {
-    setLoadingAccount(true)
     setIsModalOpen(true)
     
     try {
@@ -124,8 +122,6 @@ export function AccountSearch({ userRole }: AccountSearchProps) {
       }
     } catch (error) {
       console.error('Error fetching account:', error)
-    } finally {
-      setLoadingAccount(false)
     }
   }
 

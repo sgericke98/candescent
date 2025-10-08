@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Activity } from '@/lib/types/database'
 import { CheckCircle2, Clock, AlertCircle, XCircle } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
@@ -22,11 +21,7 @@ interface ActivityStatusDashboardProps {
 export function ActivityStatusDashboard({ activities }: ActivityStatusDashboardProps) {
   const [statusData, setStatusData] = useState<ActivityStatusData[]>([])
 
-  useEffect(() => {
-    calculateStatusData()
-  }, [activities])
-
-  const calculateStatusData = () => {
+  const calculateStatusData = useCallback(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
@@ -87,7 +82,11 @@ export function ActivityStatusDashboard({ activities }: ActivityStatusDashboardP
     ]
 
     setStatusData(data)
-  }
+  }, [activities])
+
+  useEffect(() => {
+    calculateStatusData()
+  }, [calculateStatusData])
 
   const chartData = statusData.map(item => ({
     name: item.status,

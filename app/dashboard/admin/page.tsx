@@ -77,7 +77,7 @@ export default function AdminPage() {
         const error = await response.json()
         toast.error(error.error || 'Failed to add DSM')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to add DSM')
     }
   }
@@ -101,7 +101,7 @@ export default function AdminPage() {
       } else {
         toast.error('Failed to update DSM')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update DSM')
     }
   }
@@ -118,7 +118,7 @@ export default function AdminPage() {
       } else {
         toast.error('Failed to delete user')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete user')
     }
   }
@@ -140,7 +140,7 @@ export default function AdminPage() {
       } else {
         toast.error('Failed to add sponsor')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to add sponsor')
     }
   }
@@ -163,7 +163,7 @@ export default function AdminPage() {
       } else {
         toast.error('Failed to update sponsor')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update sponsor')
     }
   }
@@ -180,7 +180,7 @@ export default function AdminPage() {
       } else {
         toast.error('Failed to delete sponsor')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete sponsor')
     }
   }

@@ -25,7 +25,7 @@ export function HealthChip({ score, className }: HealthChipProps) {
     }
   }
 
-  const { label, bg, fg } = getHealthStatus(score)
+  const { bg, fg } = getHealthStatus(score)
 
   return (
     <Badge 

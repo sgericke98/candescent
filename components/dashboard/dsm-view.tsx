@@ -18,7 +18,6 @@ export function DsmView({ dsmName }: DsmViewProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedAccount, setSelectedAccount] = useState<AccountWithDetails | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [loadingAccount, setLoadingAccount] = useState(false)
 
   useEffect(() => {
     fetchAccounts()
@@ -50,7 +49,6 @@ export function DsmView({ dsmName }: DsmViewProps) {
   })
 
   const handleAccountClick = async (accountId: string) => {
-    setLoadingAccount(true)
     setIsModalOpen(true)
     
     try {
@@ -63,8 +61,6 @@ export function DsmView({ dsmName }: DsmViewProps) {
       }
     } catch (error) {
       console.error('Error fetching account:', error)
-    } finally {
-      setLoadingAccount(false)
     }
   }
 

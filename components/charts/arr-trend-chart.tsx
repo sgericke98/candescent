@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Account } from '@/lib/types/database'
 
@@ -16,6 +16,29 @@ interface TrendDataPoint {
 export function ARRTrendChart({ accounts }: ARRTrendChartProps) {
   const [trendData, setTrendData] = useState<TrendDataPoint[]>([])
   const [loading, setLoading] = useState(true)
+
+  const generateFallbackData = useCallback(() => {
+    // If no snapshots exist, show current ARR across all months
+    const atRiskAccounts = accounts.filter(acc => 
+      acc.status === 'yellow' || acc.status === 'red'
+    )
+    const totalARR = atRiskAccounts.reduce((sum, acc) => sum + (acc.arr_usd || 0), 0)
+    const arrInMillions = Math.round(totalARR / 100) / 10
+    
+    const months = []
+    const today = new Date()
+    
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(today.getFullYear(), today.getMonth() - i, 1)
+      const monthName = date.toLocaleString('default', { month: 'short' })
+      months.push({
+        month: monthName,
+        arr: arrInMillions
+      })
+    }
+    
+    return months
+  }, [accounts])
 
   useEffect(() => {
     // Fetch historical snapshot data
@@ -42,16 +65,15 @@ export function ARRTrendChart({ accounts }: ARRTrendChartProps) {
     }
     
     fetchHistoricalData()
-  }, [accounts])
+  }, [accounts, generateFallbackData])
 
   const groupSnapshotsByMonth = (snapshots: Record<string, unknown>[]) => {
     const monthlyMap: Record<string, { total: number; count: number }> = {}
     
     snapshots.forEach(snapshot => {
       if (snapshot.status === 'yellow' || snapshot.status === 'red') {
-        const date = new Date(snapshot.snapshot_date as string)
-        const monthKey = `${date.getFullYear()}-${date.getMonth()}`
-        const monthName = date.toLocaleString('default', { month: 'short' })
+      const date = new Date(snapshot.snapshot_date as string)
+      const monthKey = `${date.getFullYear()}-${date.getMonth()}`
         
         if (!monthlyMap[monthKey]) {
           monthlyMap[monthKey] = { total: 0, count: 0 }
@@ -80,29 +102,6 @@ export function ARRTrendChart({ accounts }: ARRTrendChartProps) {
     }
     
     return result
-  }
-
-  const generateFallbackData = () => {
-    // If no snapshots exist, show current ARR across all months
-    const atRiskAccounts = accounts.filter(acc => 
-      acc.status === 'yellow' || acc.status === 'red'
-    )
-    const totalARR = atRiskAccounts.reduce((sum, acc) => sum + (acc.arr_usd || 0), 0)
-    const arrInMillions = Math.round(totalARR / 100) / 10
-    
-    const months = []
-    const today = new Date()
-    
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(today.getFullYear(), today.getMonth() - i, 1)
-      const monthName = date.toLocaleString('default', { month: 'short' })
-      months.push({
-        month: monthName,
-        arr: arrInMillions
-      })
-    }
-    
-    return months
   }
 
   if (loading) {

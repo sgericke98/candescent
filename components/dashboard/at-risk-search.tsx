@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { StatusBadge } from "@/components/status-badge"
 import { HealthChip } from "@/components/health-chip"
 import { AccountDetailModal } from "@/components/account-detail-modal"
 import { formatCurrency, formatDate } from "@/lib/utils"
@@ -22,7 +21,6 @@ export function AtRiskSearch() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [selectedAccount, setSelectedAccount] = useState<AccountWithDetails | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [loadingAccount, setLoadingAccount] = useState(false)
 
   useEffect(() => {
     // Fetch accounts from API with at-risk filter
@@ -95,7 +93,6 @@ export function AtRiskSearch() {
   }
 
   const handleAccountClick = async (accountId: string) => {
-    setLoadingAccount(true)
     setIsModalOpen(true)
     
     try {
@@ -108,8 +105,6 @@ export function AtRiskSearch() {
       }
     } catch (error) {
       console.error('Error fetching account:', error)
-    } finally {
-      setLoadingAccount(false)
     }
   }
 

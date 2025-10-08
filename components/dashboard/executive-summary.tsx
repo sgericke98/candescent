@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { AccountDetailModal } from "@/components/account-detail-modal"
 import { formatCurrency, formatDate } from "@/lib/utils"
 import { Account, AccountWithDetails, Activity as ActivityType } from "@/lib/types/database"
-import { TrendingUp, TrendingDown, Users, Calendar, Activity } from "lucide-react"
+import { Calendar, Activity } from "lucide-react"
 import { toast } from "sonner"
 import { AccountsByExecSponsorChart } from "@/components/charts/accounts-by-exec-sponsor-chart"
 import { ARRTrendChart } from "@/components/charts/arr-trend-chart"
@@ -41,7 +41,6 @@ interface CriticalAccountData {
 export function ExecutiveSummary() {
   const [selectedAccount, setSelectedAccount] = useState<AccountWithDetails | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [loadingAccount, setLoadingAccount] = useState(false)
   const [accounts, setAccounts] = useState<Account[]>([])
   const [activities, setActivities] = useState<ActivityType[]>([])
   const [criticalAccountsData, setCriticalAccountsData] = useState<CriticalAccountData[]>([])
@@ -204,7 +203,6 @@ export function ExecutiveSummary() {
 
 
   const handleAccountClick = async (accountId: string) => {
-    setLoadingAccount(true)
     setIsModalOpen(true)
     
     try {
@@ -222,8 +220,6 @@ export function ExecutiveSummary() {
       console.error('Error fetching account:', error)
       toast.error('Error loading account details')
       setIsModalOpen(false)
-    } finally {
-      setLoadingAccount(false)
     }
   }
 

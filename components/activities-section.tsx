@@ -79,7 +79,7 @@ export function ActivitiesSection({
       } else {
         throw new Error('Failed to add')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to add activity')
     }
   }
@@ -108,7 +108,7 @@ export function ActivitiesSection({
       } else {
         throw new Error('Failed to update')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update activity')
     }
   }
@@ -124,7 +124,7 @@ export function ActivitiesSection({
       } else {
         throw new Error('Failed to delete')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete activity')
     }
   }
@@ -144,7 +144,7 @@ export function ActivitiesSection({
       } else {
         throw new Error('Failed to update')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update activity status')
     }
   }

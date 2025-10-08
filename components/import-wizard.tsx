@@ -5,11 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import Papa from 'papaparse'
 import * as XLSX from 'xlsx'
 import { toast } from "sonner"
-import { Upload, FileSpreadsheet, ArrowRight, Check, X, Download } from "lucide-react"
+import { Upload, FileSpreadsheet, ArrowRight, Check, Download } from "lucide-react"
 
 interface ImportWizardProps {
   entityType: 'accounts' | 'stakeholders' | 'risks' | 'activities' | 'win_rooms'
@@ -38,7 +37,7 @@ const FIELD_DEFINITIONS: Record<string, { label: string; required: boolean; type
 
 export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
   const [step, setStep] = useState<'upload' | 'mapping' | 'preview' | 'importing' | 'complete'>('upload')
-  const [file, setFile] = useState<File | null>(null)
+  const [, setFile] = useState<File | null>(null)
   const [csvData, setCsvData] = useState<Record<string, unknown>[]>([])
   const [headers, setHeaders] = useState<string[]>([])
   const [fieldMapping, setFieldMapping] = useState<Record<string, string>>({})
@@ -138,14 +137,14 @@ export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
         toast.error(`Import failed: ${error.error}`)
         setStep('preview')
       }
-    } catch (error) {
+    } catch {
       toast.error('Import failed')
       setStep('preview')
     }
   }
 
   const downloadTemplate = () => {
-    const template = Object.entries(FIELD_DEFINITIONS).map(([key, field]) => ({
+    const template = Object.entries(FIELD_DEFINITIONS).map(([, field]) => ({
       [field.label]: field.required ? 'REQUIRED' : 'optional'
     }))
     
@@ -360,8 +359,8 @@ export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
                 <thead className="border-b">
                   <tr>
                     {Object.entries(fieldMapping)
-                      .filter(([_, csvField]) => csvField)
-                      .map(([dbField, _]) => (
+                      .filter(([, csvField]) => csvField)
+                      .map(([dbField]) => (
                         <th key={dbField} className="text-left p-2 font-semibold">
                           {FIELD_DEFINITIONS[dbField]?.label || dbField}
                         </th>
@@ -372,7 +371,7 @@ export function ImportWizard({ entityType, onComplete }: ImportWizardProps) {
                   {csvData.slice(0, 5).map((row, idx) => (
                     <tr key={idx} className="border-b">
                       {Object.entries(fieldMapping)
-                        .filter(([_, csvField]) => csvField)
+                        .filter(([, csvField]) => csvField)
                         .map(([dbField, csvField]) => (
                           <td key={dbField} className="p-2">
                             {String(row[csvField] || '-')}

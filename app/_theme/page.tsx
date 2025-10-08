@@ -29,15 +29,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { 
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-} from "@/components/ui/toast"
-import { Separator } from "@/components/ui/separator"
-import { 
   Table,
   TableBody,
   TableCell,
@@ -68,24 +59,7 @@ import {
   Label
 } from "@/components/ui/label"
 import { 
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
-import { 
-  CheckCircle, 
-  AlertTriangle, 
-  XCircle, 
-  ChevronDown,
-  Settings,
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  Activity,
-  TrendingUp,
-  TrendingDown,
-  Minus
+  ChevronDown
 } from "lucide-react"
 
 export default function ThemePage() {

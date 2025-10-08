@@ -10,7 +10,6 @@ import { AccountWithDetails } from "@/lib/types/database"
 import { formatDate } from "@/lib/utils"
 import { toast } from "sonner"
 import { ArrowLeft, Plus, Calendar, Edit, Trash2, Info, Target, Save, X } from "lucide-react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { HistoricalAccountView } from "@/components/historical-account-view"
 import { ActivitiesSection } from "@/components/activities-section"
@@ -68,9 +67,6 @@ export default function WinRoomPage() {
     new Date(b.date).getTime() - new Date(a.date).getTime()
   )
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase()
-  }
 
   const getRiskTypeColor = (riskType: string) => {
     switch (riskType) {
@@ -95,7 +91,7 @@ export default function WinRoomPage() {
       } else {
         throw new Error('Failed to delete')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete stakeholder')
     }
   }
@@ -127,7 +123,7 @@ export default function WinRoomPage() {
       } else {
         throw new Error('Failed to update')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update stakeholder')
     }
   }
@@ -143,7 +139,7 @@ export default function WinRoomPage() {
       } else {
         throw new Error('Failed to delete')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete risk')
     }
   }
@@ -176,7 +172,7 @@ export default function WinRoomPage() {
       } else {
         throw new Error('Failed to update')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update risk')
     }
   }
@@ -210,7 +206,7 @@ export default function WinRoomPage() {
       } else {
         throw new Error('Failed to add')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to add stakeholder')
     }
   }
@@ -243,7 +239,7 @@ export default function WinRoomPage() {
       } else {
         throw new Error('Failed to add')
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to add risk')
     }
   }
@@ -833,17 +829,17 @@ export default function WinRoomPage() {
                         <div className="text-right">
                           <p className="text-sm text-muted-foreground">Health Score</p>
                           <Badge className={
-                            winRoom.account_snapshot.status === 'green' ? 'bg-green-100 text-green-800' :
-                            winRoom.account_snapshot.status === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
+                            (winRoom.account_snapshot?.status as string) === 'green' ? 'bg-green-100 text-green-800' :
+                            (winRoom.account_snapshot?.status as string) === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-red-100 text-red-800'
                           }>
-                            {winRoom.account_snapshot.health_score}
+                            {winRoom.account_snapshot?.health_score as number}
                           </Badge>
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-muted-foreground">ARR</p>
                           <p className="font-semibold">
-                            ${((winRoom.account_snapshot.arr_usd || 0) * 1000).toLocaleString()}
+                            ${(((winRoom.account_snapshot?.arr_usd as number) || 0) * 1000).toLocaleString()}
                           </p>
                         </div>
                       </>

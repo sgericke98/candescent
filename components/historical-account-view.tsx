@@ -13,13 +13,11 @@ import {
   MapPin, 
   Building, 
   DollarSign, 
-  User, 
   Users, 
   FileText,
   Hash,
   Target,
   CheckCircle2,
-  Clock,
   AlertTriangle,
   History
 } from "lucide-react"
@@ -33,10 +31,10 @@ interface HistoricalAccountViewProps {
 export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAccountViewProps) {
   if (!winRoom || !winRoom.account_snapshot) return null
 
-  const account = winRoom.account_snapshot
-  const stakeholders = winRoom.stakeholders_snapshot || []
-  const risks = winRoom.risks_snapshot || []
-  const activities = winRoom.activities_snapshot || []
+  const account = winRoom.account_snapshot as Record<string, unknown>
+  const stakeholders = (winRoom.stakeholders_snapshot || []) as Record<string, unknown>[]
+  const risks = (winRoom.risks_snapshot || []) as Record<string, unknown>[]
+  const activities = (winRoom.activities_snapshot || []) as Record<string, unknown>[]
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase()
@@ -71,7 +69,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
             <div>
               <DialogTitle className="text-2xl font-bold flex items-center gap-2">
                 <History className="h-6 w-6 text-blue-600" />
-                {account.name}
+                {account.name as string}
               </DialogTitle>
               <p className="text-sm text-muted-foreground mt-1">
                 Historical Snapshot from {formatDate(winRoom.date)}
@@ -81,8 +79,8 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
               <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                 Read-Only View
               </Badge>
-              <StatusBadge status={account.status} />
-              <HealthChip score={account.health_score} />
+              <StatusBadge status={account.status as 'green' | 'yellow' | 'red'} />
+              <HealthChip score={account.health_score as number} />
             </div>
           </div>
         </DialogHeader>
@@ -122,7 +120,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <MapPin className="h-5 w-5 text-gray-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-600 font-medium">LOCATION</p>
-                    <p className="font-semibold text-gray-900">{account.location}</p>
+                    <p className="font-semibold text-gray-900">{account.location as string}</p>
                   </div>
                 </div>
                 
@@ -130,7 +128,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <Building className="h-5 w-5 text-gray-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-600 font-medium">TYPE</p>
-                    <p className="font-semibold text-gray-900">{account.type}</p>
+                    <p className="font-semibold text-gray-900">{account.type as string}</p>
                   </div>
                 </div>
                 
@@ -138,7 +136,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <Hash className="h-5 w-5 text-gray-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-600 font-medium">RSSID</p>
-                    <p className="font-semibold text-gray-900">{account.rssid || 'N/A'}</p>
+                    <p className="font-semibold text-gray-900">{(account.rssid as string) || 'N/A'}</p>
                   </div>
                 </div>
                 
@@ -146,7 +144,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <FileText className="h-5 w-5 text-gray-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-600 font-medium">DI #</p>
-                    <p className="font-semibold text-gray-900">{account.di_number || 'N/A'}</p>
+                    <p className="font-semibold text-gray-900">{(account.di_number as string) || 'N/A'}</p>
                   </div>
                 </div>
                 
@@ -155,7 +153,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <div>
                     <p className="text-xs text-gray-600 font-medium">AUM</p>
                     <p className="font-semibold text-gray-900">
-                      {account.aum ? `$${account.aum.toFixed(2)}M` : 'N/A'}
+                      {(account.aum as number) ? `$${(account.aum as number).toFixed(2)}M` : 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -164,7 +162,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <DollarSign className="h-5 w-5 text-gray-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-600 font-medium">ARR</p>
-                    <p className="font-semibold text-gray-900">{formatCurrency(account.arr_usd * 1000)}</p>
+                    <p className="font-semibold text-gray-900">{formatCurrency((account.arr_usd as number) * 1000)}</p>
                   </div>
                 </div>
                 
@@ -172,7 +170,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <CheckCircle2 className="h-5 w-5 text-gray-600 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-600 font-medium">PATH TO GREEN</p>
-                    <p className="font-semibold text-gray-900">{account.path_to_green ? 'Yes' : 'No'}</p>
+                    <p className="font-semibold text-gray-900">{(account.path_to_green as boolean) ? 'Yes' : 'No'}</p>
                   </div>
                 </div>
                 
@@ -181,7 +179,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <div>
                     <p className="text-xs text-gray-600 font-medium">SUBSCRIPTION END</p>
                     <p className="font-semibold text-gray-900">
-                      {account.subscription_end ? formatDateShort(account.subscription_end) : 'N/A'}
+                      {(account.subscription_end as string) ? formatDateShort(account.subscription_end as string) : 'N/A'}
                     </p>
                   </div>
                 </div>
@@ -191,7 +189,7 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   <div className="flex-1">
                     <p className="text-xs text-gray-600 font-medium">CURRENT SOLUTIONS</p>
                     <p className="font-semibold text-gray-900 mt-1">
-                      {account.current_solutions || 'No solutions listed'}
+                      {(account.current_solutions as string) || 'No solutions listed'}
                     </p>
                   </div>
                 </div>
@@ -215,24 +213,26 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                       <div className="flex items-center gap-4">
                         <Avatar>
                           <AvatarFallback className="bg-gray-200 text-gray-700">
-                            {getInitials(stakeholder.name)}
+                            {getInitials(stakeholder.name as string)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-semibold">{stakeholder.name}</p>
-                          <p className="text-sm text-blue-600 font-medium">{stakeholder.role}</p>
-                          {stakeholder.description && (
-                            <p className="text-sm text-muted-foreground mt-1">{stakeholder.description}</p>
+                          <p className="font-semibold">{stakeholder.name as string}</p>
+                          <p className="text-sm text-blue-600 font-medium">{String(stakeholder.role)}</p>
+                          {typeof stakeholder.description === "string" && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {stakeholder.description}
+                            </p>
                           )}
                         </div>
                       </div>
-                      {stakeholder.status && (
+                      {typeof stakeholder.status === "string" && (
                         <div 
                           className={`w-4 h-4 rounded-full ${
-                            stakeholder.status === 'green' ? 'bg-green-500' :
-                            stakeholder.status === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                            (stakeholder.status as string) === 'green' ? 'bg-green-500' :
+                            (stakeholder.status as string) === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
                           }`}
-                          title={`Status: ${stakeholder.status}`}
+                          title={`Status: ${String(stakeholder.status)}`}
                         />
                       )}
                     </div>
@@ -256,27 +256,27 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                   {risks.map((risk, idx) => (
                     <div key={idx} className="border rounded-lg p-4 space-y-3 bg-gray-50">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-lg">{risk.key_risk}</h4>
-                        <Badge className={getRiskTypeColor(risk.risk_type)}>
-                          {risk.risk_type}
+                        <h4 className="font-semibold text-lg">{risk.key_risk as string}</h4>
+                        <Badge className={getRiskTypeColor(risk.risk_type as string)}>
+                          {risk.risk_type as string}
                         </Badge>
                       </div>
                       
-                      {risk.summary && (
+                      {typeof risk.summary === "string" && (
                         <div>
                           <p className="text-sm font-medium text-muted-foreground">Summary</p>
                           <p className="text-sm mt-1">{risk.summary}</p>
                         </div>
                       )}
                       
-                      {risk.supporting_evidence && (
+                      {typeof risk.supporting_evidence === "string" && (
                         <div>
                           <p className="text-sm font-medium text-muted-foreground">Supporting Evidence</p>
                           <p className="text-sm mt-1">{risk.supporting_evidence}</p>
                         </div>
                       )}
                       
-                      {risk.levers_to_pull && (
+                      {typeof risk.levers_to_pull === "string" && (
                         <div>
                           <p className="text-sm font-medium text-muted-foreground">Levers to Pull</p>
                           <p className="text-sm mt-1">{risk.levers_to_pull}</p>
@@ -313,27 +313,27 @@ export function HistoricalAccountView({ winRoom, isOpen, onClose }: HistoricalAc
                     <tbody>
                       {activities.map((activity, idx) => (
                         <tr key={idx} className="border-b last:border-0">
-                          <td className="py-4 font-medium">{activity.activity}</td>
+                          <td className="py-4 font-medium">{activity.activity as string}</td>
                           <td className="py-4">
                             <div className="flex items-center gap-2">
                               <Avatar className="h-6 w-6">
                                 <AvatarFallback className="text-xs bg-gray-200">
-                                  {getInitials(activity.owner?.full_name || 'Unknown')}
+                                  {getInitials((activity.owner as Record<string, unknown>)?.full_name as string || 'Unknown')}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-sm">{activity.owner?.full_name || 'Unassigned'}</span>
+                              <span className="text-sm">{(activity.owner as Record<string, unknown>)?.full_name as string || 'Unassigned'}</span>
                             </div>
                           </td>
                           <td className="py-4 text-sm text-muted-foreground max-w-xs truncate">
-                            {activity.description || '-'}
+                            {activity.description as string || '-'}
                           </td>
                           <td className="py-4">
-                            <Badge className={getActivityStatusColor(activity.status)}>
-                              {activity.status}
+                            <Badge className={getActivityStatusColor(activity.status as string)}>
+                              {activity.status as string}
                             </Badge>
                           </td>
                           <td className="py-4 text-sm">
-                            {activity.due_date ? formatDateShort(activity.due_date) : '-'}
+                            {activity.due_date ? formatDateShort(activity.due_date as string) : '-'}
                           </td>
                         </tr>
                       ))}

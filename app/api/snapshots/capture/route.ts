@@ -25,7 +25,7 @@ export async function POST() {
       snapshot_date: today
     }))
     
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('health_score_snapshots')
       .upsert(snapshots, { onConflict: 'account_id,snapshot_date' })
     

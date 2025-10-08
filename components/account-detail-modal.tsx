@@ -4,15 +4,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { StatusBadge } from "@/components/status-badge"
 import { HealthChip } from "@/components/health-chip"
 import { formatCurrency, formatDate, formatDateShort } from "@/lib/utils"
-import { AccountWithDetails, Activity, Risk, Stakeholder, WinRoom } from "@/lib/types/database"
+import { AccountWithDetails } from "@/lib/types/database"
 import { toast } from "sonner"
 import { ActivitiesSection } from "@/components/activities-section"
 import { 
@@ -29,12 +26,9 @@ import {
   FileText,
   Hash,
   CreditCard,
-  Target,
   CheckCircle2,
   Clock,
   AlertTriangle,
-  Plus,
-  Trash2,
   ExternalLink
 } from "lucide-react"
 
@@ -99,7 +93,7 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
         throw new Error('Failed to update account')
       }
 
-      const updatedData = await response.json()
+      await response.json()
       
       // Update local state with new data
       const updatedAccount = { ...localAccount, ...editedFields }
@@ -111,8 +105,8 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
       if (onUpdate) {
         onUpdate(updatedAccount)
       }
-    } catch (error) {
-      console.error('Error updating account:', error)
+    } catch {
+      console.error('Error updating account')
       toast.error('Failed to update account')
     } finally {
       setIsSaving(false)
@@ -135,27 +129,6 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
   }
 
 
-  const handleDeleteStakeholder = async (stakeholderId: string) => {
-    if (!confirm('Are you sure you want to delete this stakeholder?')) return
-    
-    try {
-      const response = await fetch(`/api/stakeholders?id=${stakeholderId}`, {
-        method: 'DELETE'
-      })
-      
-      if (response.ok) {
-        setLocalAccount(prev => prev ? {
-          ...prev,
-          stakeholders: prev.stakeholders.filter(s => s.id !== stakeholderId)
-        } : null)
-        toast.success('Stakeholder deleted')
-      } else {
-        throw new Error('Failed to delete')
-      }
-    } catch (error) {
-      toast.error('Failed to delete stakeholder')
-    }
-  }
 
 
   const navigateToBattlePlan = () => {
@@ -172,32 +145,9 @@ export function AccountDetailModal({ account, isOpen, onClose, onUpdate, canEdit
     }
   }
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase()
-  }
 
 
-  const getRiskTypeColor = (riskType: string) => {
-    switch (riskType) {
-      case 'Competition': return 'bg-yellow-100 text-yellow-800'
-      case 'Price': return 'bg-blue-100 text-blue-800'
-      case 'Product': return 'bg-orange-100 text-orange-800'
-      case 'Delivery': return 'bg-purple-100 text-purple-800'
-      case 'Relationship': return 'bg-red-100 text-red-800'
-      case 'Changes': return 'bg-green-100 text-green-800'
-      default: return 'bg-gray-100 text-gray-800'
-    }
-  }
 
-  const getStakeholderStatusColor = (status?: string | null) => {
-    if (!status) return 'bg-gray-400'
-    switch (status) {
-      case 'green': return 'bg-green-500'
-      case 'yellow': return 'bg-yellow-500'
-      case 'red': return 'bg-red-500'
-      default: return 'bg-gray-400'
-    }
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

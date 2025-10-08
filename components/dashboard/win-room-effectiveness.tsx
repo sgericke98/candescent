@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Account } from '@/lib/types/database'
@@ -45,11 +45,7 @@ export function WinRoomEffectiveness({ accounts }: WinRoomEffectivenessProps) {
   })
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    calculateMetrics()
-  }, [accounts])
-
-  const calculateMetrics = async () => {
+  const calculateMetrics = useCallback(async () => {
     try {
       const atRiskAccounts = accounts.filter(acc => 
         acc.status === 'yellow' || acc.status === 'red'
@@ -123,7 +119,11 @@ export function WinRoomEffectiveness({ accounts }: WinRoomEffectivenessProps) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [accounts])
+
+  useEffect(() => {
+    calculateMetrics()
+  }, [calculateMetrics])
 
   if (loading) {
     return (
