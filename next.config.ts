@@ -1,15 +1,18 @@
-import type { NextConfig } from "next";
-import path from "path";
-
-const nextConfig: NextConfig = {
-  outputFileTracingRoot: path.join(__dirname, '.'),
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': path.resolve(__dirname, '.'),
-    };
-    return config;
-  },
-};
-
-export default nextConfig;
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+    images: {
+      // Configure image domains if needed
+      domains: [],
+    },
+    // Preserve path aliases from Vite config
+    webpack: (config: any) => {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@': require('path').resolve(__dirname, './src'),
+      };
+      return config;
+    },
+  };
+  
+  module.exports = nextConfig;
+  
